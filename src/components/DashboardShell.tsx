@@ -37,7 +37,7 @@ export function DashboardShell({
     <main className="social-shell">
       <aside className="social-sidebar">
         <Link className="social-logo" href="/">
-          <span>School OS</span>
+          <span>NeoSchool</span>
         </Link>
         <nav className="social-tabs" aria-label={roleLabel}>
           {nav.map((item) => (

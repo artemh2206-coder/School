@@ -4,7 +4,7 @@ export default function HomePage() {
   return (
     <main className="auth-shell">
       <section className="auth-card">
-        <p className="eyebrow">School OS</p>
+        <p className="eyebrow">NeoSchool</p>
         <h1>Техническая открытка платформы</h1>
         <p className="muted">
           Временный вход без авторизации. Позже эти три кнопки можно подключить к полноценному

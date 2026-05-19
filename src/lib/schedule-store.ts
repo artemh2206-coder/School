@@ -1,6 +1,5 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import path from "node:path";
-import { defaultTeacherId, studentRoster } from "@/lib/school-ids";
+import type { LessonStatus } from "@prisma/client";
+import { db } from "@/server/db";
 
 export type Lesson = {
   id: string;
@@ -21,141 +20,140 @@ export type LessonWithTiming = Lesson & {
   startsAtIso: string;
 };
 
-const defaultLessons: Lesson[] = [
-  { id: "lesson-1", teacherId: defaultTeacherId, studentId: "S00001", month: 4, week: 0, day: 0, start: 18, end: 19, student: studentRoster[0].name, topic: "Travel speaking + modal verbs" },
-  { id: "lesson-2", teacherId: defaultTeacherId, studentId: "S00002", month: 4, week: 0, day: 2, start: 17, end: 18, student: studentRoster[1].name, topic: "Listening practice + daily routines" },
-  { id: "lesson-3", teacherId: defaultTeacherId, studentId: "S00003", month: 4, week: 1, day: 4, start: 16, end: 17, student: studentRoster[2].name, topic: "Grammar review + speaking" },
-  { id: "lesson-4", teacherId: defaultTeacherId, studentId: "S00004", month: 4, week: 2, day: 5, start: 11, end: 12, student: studentRoster[3].name, topic: "Vocabulary builder" },
-  { id: "lesson-5", teacherId: defaultTeacherId, studentId: "S00001", month: 4, week: 3, day: 6, start: 10, end: 11, student: studentRoster[0].name, topic: "Travel speaking + modal verbs" },
-];
-
-const globalScheduleStore = globalThis as typeof globalThis & {
-  __schoolOsLessons?: Lesson[];
+type DbLesson = {
+  id: string;
+  teacherId: string;
+  studentId: string;
+  startsAt: Date;
+  endsAt: Date;
+  topic: string;
+  status: LessonStatus;
+  student: {
+    fullName: string;
+  };
 };
 
-const dataDir = path.join(process.cwd(), ".data");
-const dataPath = path.join(dataDir, "schedule.json");
-
 export function getLessonStartDate(lesson: Pick<Lesson, "day" | "month" | "start" | "week">) {
-  const firstDayOfMonth = new Date(2026, lesson.month, 1);
-  const mondayOffset = (firstDayOfMonth.getDay() + 6) % 7;
+  const firstDayOfMonth = new Date(Date.UTC(2026, lesson.month, 1));
+  const mondayOffset = (firstDayOfMonth.getUTCDay() + 6) % 7;
   const date = 1 - mondayOffset + lesson.week * 7 + lesson.day;
 
-  return new Date(2026, lesson.month, date, lesson.start, 0, 0, 0);
+  return new Date(Date.UTC(2026, lesson.month, date, lesson.start, 0, 0, 0));
 }
 
-export function enrichLessonTiming(lesson: Lesson, now = new Date()): LessonWithTiming {
-  const startsAt = getLessonStartDate(lesson);
+function getScheduleParts(startsAt: Date) {
+  const month = startsAt.getUTCMonth();
+  const firstDayOfMonth = new Date(Date.UTC(startsAt.getUTCFullYear(), month, 1));
+  const mondayOffset = (firstDayOfMonth.getUTCDay() + 6) % 7;
+  const realStart = 1 - mondayOffset;
+  const dayIndex = (startsAt.getUTCDay() + 6) % 7;
+  const week = Math.floor((startsAt.getUTCDate() - realStart) / 7);
 
   return {
-    ...lesson,
-    isFuture: startsAt >= now,
-    isPast: startsAt < now,
-    startsAtIso: startsAt.toISOString(),
+    day: dayIndex,
+    month,
+    start: startsAt.getUTCHours(),
+    week,
   };
 }
 
-export function getLessonsWithTiming(now = new Date()) {
-  return getLessons().map((lesson) => enrichLessonTiming(lesson, now));
-}
-
-function getStudentById(studentId: string) {
-  return studentRoster.find((student) => student.id === studentId) ?? studentRoster[0];
-}
-
-function inferStudentId(studentName: string) {
-  const normalized = studentName.toLowerCase();
-
-  if (normalized.includes("ирина") || normalized.includes("коваль") || normalized.includes("†") || normalized.includes("š")) {
-    return "S00002";
-  }
-
-  if (normalized.includes("давид") || normalized.includes("леви") || normalized.includes("”") || normalized.includes("›")) {
-    return "S00003";
-  }
-
-  if (normalized.includes("софия") || normalized.includes("грин") || normalized.includes("ˇ")) {
-    return "S00004";
-  }
-
-  return "S00001";
-}
-
-function normalizeLesson(lesson: Partial<Lesson> & Pick<Lesson, "day" | "id" | "month" | "start" | "student" | "week">): Lesson {
-  const studentId = lesson.studentId ?? inferStudentId(lesson.student);
-  const student = getStudentById(studentId);
+function toScheduleLesson(lesson: DbLesson, now = new Date()): LessonWithTiming {
+  const parts = getScheduleParts(lesson.startsAt);
 
   return {
-    ...lesson,
-    end: lesson.end ?? lesson.start + 1,
-    student: student.name,
-    studentId,
-    teacherId: lesson.teacherId ?? defaultTeacherId,
-    topic: lesson.topic ?? "Travel speaking + modal verbs",
+    ...parts,
+    end: lesson.endsAt.getUTCHours(),
+    id: lesson.id,
+    isFuture: lesson.startsAt >= now,
+    isPast: lesson.startsAt < now,
+    startsAtIso: lesson.startsAt.toISOString(),
+    student: lesson.student.fullName,
+    studentId: lesson.studentId,
+    teacherId: lesson.teacherId,
+    topic: lesson.topic,
   };
 }
 
-function readPersistedLessons() {
-  if (!existsSync(dataPath)) {
-    return [...defaultLessons];
+export async function getLessonsWithTiming(now = new Date()) {
+  const lessons = await db.lesson.findMany({
+    include: {
+      student: {
+        select: {
+          fullName: true,
+        },
+      },
+    },
+    orderBy: {
+      startsAt: "asc",
+    },
+    where: {
+      status: {
+        not: "CANCELLED",
+      },
+    },
+  });
+
+  return lessons.map((lesson) => toScheduleLesson(lesson, now));
+}
+
+export async function addLesson(input: Omit<Lesson, "id" | "end" | "student">) {
+  const startsAt = getLessonStartDate(input);
+  const endsAt = new Date(startsAt);
+  endsAt.setUTCHours(startsAt.getUTCHours() + 1);
+
+  const existing = await db.lesson.findFirst({
+    where: {
+      startsAt,
+      status: {
+        not: "CANCELLED",
+      },
+      teacherId: input.teacherId,
+    },
+  });
+
+  if (existing) {
+    await db.lesson.update({
+      data: {
+        studentId: input.studentId,
+        topic: input.topic ?? existing.topic,
+      },
+      where: {
+        id: existing.id,
+      },
+    });
+
+    return existing;
   }
 
-  try {
-    return (JSON.parse(readFileSync(dataPath, "utf8")) as Lesson[]).map(normalizeLesson);
-  } catch {
-    return [...defaultLessons];
-  }
+  return db.lesson.create({
+    data: {
+      endsAt,
+      startsAt,
+      studentId: input.studentId,
+      teacherId: input.teacherId,
+      topic: input.topic ?? "Travel speaking + modal verbs",
+    },
+  });
 }
 
-function persistLessons(lessons: Lesson[]) {
-  if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true });
-  }
-
-  writeFileSync(dataPath, JSON.stringify(lessons, null, 2));
+export async function deleteLesson(id: string) {
+  await db.lesson.update({
+    data: {
+      status: "CANCELLED",
+    },
+    where: {
+      id,
+    },
+  });
 }
 
-export function getLessons() {
-  globalScheduleStore.__schoolOsLessons ??= readPersistedLessons();
-  return globalScheduleStore.__schoolOsLessons;
-}
-
-export function addLesson(input: Omit<Lesson, "id" | "end" | "student">) {
-  const lessons = getLessons();
-  const student = getStudentById(input.studentId);
-  const lesson: Lesson = {
-    ...input,
-    id: `${Date.now()}-${input.month}-${input.week}-${input.day}-${input.start}`,
-    end: input.start + 1,
-    student: student.name,
-  };
-
-  globalScheduleStore.__schoolOsLessons = [
-    ...lessons.filter(
-      (item) =>
-        !(
-          item.teacherId === lesson.teacherId &&
-          item.month === lesson.month &&
-          item.week === lesson.week &&
-          item.day === lesson.day &&
-          item.start === lesson.start
-        ),
-    ),
-    lesson,
-  ];
-  persistLessons(globalScheduleStore.__schoolOsLessons);
-
-  return lesson;
-}
-
-export function deleteLesson(id: string) {
-  globalScheduleStore.__schoolOsLessons = getLessons().filter((lesson) => lesson.id !== id);
-  persistLessons(globalScheduleStore.__schoolOsLessons);
-}
-
-export function updateLessonTopic(id: string, topic: string) {
-  globalScheduleStore.__schoolOsLessons = getLessons().map((lesson) =>
-    lesson.id === id ? { ...lesson, topic } : lesson,
-  );
-  persistLessons(globalScheduleStore.__schoolOsLessons);
+export async function updateLessonTopic(id: string, topic: string) {
+  await db.lesson.update({
+    data: {
+      topic,
+    },
+    where: {
+      id,
+    },
+  });
 }

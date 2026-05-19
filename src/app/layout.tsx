@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "School OS",
+  title: "NeoSchool",
   description: "Профессиональная платформа онлайн-школы с личными кабинетами, API и серверным ядром.",
 };
 

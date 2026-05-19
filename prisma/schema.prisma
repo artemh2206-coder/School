@@ -205,6 +205,7 @@ model Lesson {
   teacherId   String
   startsAt    DateTime
   endsAt      DateTime
+  topic       String         @default("Travel speaking + modal verbs")
   status      LessonStatus   @default(SCHEDULED)
   zoomUrl     String?
   notes       String?

@@ -18,26 +18,26 @@ const updateLessonSchema = z.object({
 
 export async function GET() {
   const now = new Date();
-  return NextResponse.json({ currentDate: now.toISOString(), lessons: getLessonsWithTiming(now) });
+  return NextResponse.json({ currentDate: now.toISOString(), lessons: await getLessonsWithTiming(now) });
 }
 
 export async function POST(request: Request) {
   const now = new Date();
   const payload = createLessonSchema.parse(await request.json());
   const lesson = addLesson(payload);
-  return NextResponse.json({ currentDate: now.toISOString(), lesson, lessons: getLessonsWithTiming(now) });
+  return NextResponse.json({ currentDate: now.toISOString(), lesson: await lesson, lessons: await getLessonsWithTiming(now) });
 }
 
 export async function DELETE(request: Request) {
   const now = new Date();
   const { id } = z.object({ id: z.string().min(1) }).parse(await request.json());
-  deleteLesson(id);
-  return NextResponse.json({ currentDate: now.toISOString(), lessons: getLessonsWithTiming(now) });
+  await deleteLesson(id);
+  return NextResponse.json({ currentDate: now.toISOString(), lessons: await getLessonsWithTiming(now) });
 }
 
 export async function PATCH(request: Request) {
   const now = new Date();
   const { id, topic } = updateLessonSchema.parse(await request.json());
-  updateLessonTopic(id, topic);
-  return NextResponse.json({ currentDate: now.toISOString(), lessons: getLessonsWithTiming(now) });
+  await updateLessonTopic(id, topic);
+  return NextResponse.json({ currentDate: now.toISOString(), lessons: await getLessonsWithTiming(now) });
 }

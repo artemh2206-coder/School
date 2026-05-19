@@ -4,9 +4,9 @@ export function MarketingNav() {
   return (
     <header className="site-nav">
       <Link className="brand" href="/">
-        <span className="brand-mark">S</span>
+        <span className="brand-mark">N</span>
         <span>
-          <strong>School OS</strong>
+          <strong>NeoSchool</strong>
           <span>онлайн-школа</span>
         </span>
       </Link>

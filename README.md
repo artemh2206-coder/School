@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# School OS
 
-## Getting Started
+Профессиональное ядро платформы онлайн-школы: публичный сайт, личные кабинеты,
+серверное API, роли, PostgreSQL-модель данных, материалы, чат, финансы и audit logs.
 
-First, run the development server:
+## Архитектура
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+Public website
+  -> auth / registration / teacher applications
+  -> protected dashboards
+  -> API routes
+  -> domain services
+  -> PostgreSQL via Prisma
+  -> file storage / payments / realtime later
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Основные маршруты
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+/                         публичный сайт
+/students                 страница для учеников
+/teachers                 страница для преподавателей
+/login                    общий вход
+/student/register         регистрация ученика
+/teacher/apply            заявка преподавателя / CV
+/admin/login              вход администратора
+/student/dashboard        кабинет ученика
+/teacher/dashboard        кабинет учителя
+/admin                    супер админка
+/api/health               health endpoint ядра
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Ядро данных
 
-## Learn More
+Prisma schema находится в `prisma/schema.prisma`.
 
-To learn more about Next.js, take a look at the following resources:
+Ключевые домены:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```text
+users
+sessions
+student_profiles
+teacher_profiles
+teacher_applications
+courses
+lesson_packages
+student_balances
+availability_slots
+lessons
+materials
+material_access
+homework
+chat_threads
+chat_messages
+payments
+withdrawal_requests
+audit_logs
+platform_settings
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Локальный запуск
 
-## Deploy on Vercel
+```bash
+npm install
+npx prisma generate
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Для реальной базы:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+copy .env.example .env
+npx prisma migrate dev
+```
+
+`DATABASE_URL` должен указывать на PostgreSQL.
+
+## Текущее состояние auth
+
+Сейчас используется demo-cookie auth, чтобы можно было строить защищенные кабинеты
+и API без ожидания полной production-auth интеграции.
+
+Следующий слой:
+
+```text
+email/password
+Google login
+phone login later
+hashed passwords
+database sessions
+role redirects
+audit logs for login/admin actions
+```
+
+## Production direction
+
+Рекомендуемый деплой:
+
+```text
+Next.js app: Vercel / Railway / Render
+Database: managed PostgreSQL, например Neon / Supabase / Railway
+File storage: Cloudflare R2 / S3 / Supabase Storage
+Payments: Stripe for EUR/USD, отдельный провайдер для UAH
+Realtime: WebSocket / Pusher / Supabase Realtime
+```

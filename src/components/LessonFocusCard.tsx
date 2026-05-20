@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLessons } from "@/components/ScheduleCalendar";
 import type { LessonWithTiming } from "@/lib/schedule-store";
@@ -20,6 +21,13 @@ type LessonFocusCardProps = {
   teacherIds?: string[];
   theme: string;
   title: string;
+};
+
+type LessonSummaryCardProps = {
+  counterpart: Counterpart;
+  lessonHref: string;
+  studentIds?: string[];
+  teacherIds?: string[];
 };
 
 const monthNames = [
@@ -63,6 +71,67 @@ function getTimeLeft(startsAtIso: string, now: number) {
     label: `${hours} ч ${minutes} мин`,
     minutes: String(minutes).padStart(2, "0"),
   };
+}
+
+export function LessonSummaryCard({
+  counterpart,
+  lessonHref,
+  studentIds,
+  teacherIds,
+}: LessonSummaryCardProps) {
+  const { lessons } = useLessons();
+  const [now, setNow] = useState(() => Date.now());
+
+  const nextLesson = [...lessons]
+    .filter((lesson) => lesson.isFuture)
+    .filter((lesson) => !teacherIds?.length || teacherIds.includes(lesson.teacherId))
+    .filter((lesson) => !studentIds?.length || studentIds.includes(lesson.studentId))
+    .sort((a, b) => new Date(a.startsAtIso).getTime() - new Date(b.startsAtIso).getTime())[0];
+
+  const lessonDate = nextLesson ? new Date(nextLesson.startsAtIso) : null;
+  const timeLeft = nextLesson ? getTimeLeft(nextLesson.startsAtIso, now) : null;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <div className="lesson-summary-card">
+      <div className="lesson-summary-person">
+        <div className="lesson-summary-avatar">{counterpart.initials}</div>
+        <div>
+          <span>Мини-профиль</span>
+          <strong>{counterpart.name}</strong>
+          <p>{counterpart.id} · {counterpart.meta}</p>
+        </div>
+      </div>
+
+      <div className="lesson-summary-grid">
+        <div>
+          <span>Дата и время</span>
+          <strong>
+            {nextLesson && lessonDate
+              ? `${weekLabels[nextLesson.day]}, ${lessonDate.getDate()} ${monthNames[nextLesson.month]}`
+              : "Урок не назначен"}
+          </strong>
+          <p>{nextLesson ? `${formatHour(nextLesson.start)}-${formatHour(nextLesson.end)}` : "Появится после записи в расписании."}</p>
+        </div>
+
+        <div className="lesson-summary-timer">
+          <span>До начала</span>
+          <strong>
+            {timeLeft ? `${timeLeft.hours}:${timeLeft.minutes}` : "--:--"}
+          </strong>
+          <p>{timeLeft?.label ?? "Таймер появится после назначения урока"}</p>
+        </div>
+      </div>
+
+      <Link className={`lesson-summary-action ${nextLesson ? "" : "disabled"}`} href={lessonHref}>
+        Подключиться к уроку
+      </Link>
+    </div>
+  );
 }
 
 export function LessonFocusCard({

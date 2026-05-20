@@ -1,5 +1,5 @@
 import { DashboardShell, Panel } from "@/components/DashboardShell";
-import { LessonFocusCard } from "@/components/LessonFocusCard";
+import { LessonSummaryCard } from "@/components/LessonFocusCard";
 import { TeacherBalanceHeader, UpcomingLessons } from "@/components/ScheduleCalendar";
 
 const teacherId = "T00001";
@@ -7,7 +7,7 @@ const teacherScheduleIds = [teacherId];
 
 const nav = [
   { href: "#schedule-modal", label: "Расписание", description: "открыть календарь" },
-  { href: "#Урок", label: "Урок", description: "Zoom, ученик, таймер" },
+  { href: "/teacher/lesson", label: "Урок", description: "открыть страницу урока" },
   { href: "#Материалы", label: "Материалы", description: "библиотека и выдача" },
   { href: "#Ученики", label: "Ученики", description: "карточки учеников" },
 ];
@@ -29,21 +29,17 @@ export default function TeacherDashboardPage() {
     >
       <div className="social-content-grid lesson-page-grid">
         <main className="social-wall">
-          <Panel title="Урок">
-            <LessonFocusCard
+          <Panel title="Ближайший урок">
+            <LessonSummaryCard
               counterpart={{
                 id: "S00001",
                 initials: "МВ",
                 meta: "English B1 · 6 уроков в пакете · Europe/Budapest",
                 name: "Марк Волков",
               }}
-              editableZoom
-              editableTopic
-              language="English B1"
+              lessonHref="/teacher/lesson"
               studentIds={["S00001"]}
               teacherIds={teacherScheduleIds}
-              theme="Travel speaking + modal verbs"
-              title="Урок с учеником"
             />
           </Panel>
           <Panel title="Материалы">

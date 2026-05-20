@@ -1,5 +1,5 @@
 import { DashboardShell, Panel } from "@/components/DashboardShell";
-import { LessonFocusCard } from "@/components/LessonFocusCard";
+import { LessonSummaryCard } from "@/components/LessonFocusCard";
 import { UpcomingLessons } from "@/components/ScheduleCalendar";
 
 const studentName = "Марк Волков";
@@ -7,7 +7,7 @@ const studentId = "S00001";
 const studentScheduleIds = [studentId];
 
 const nav = [
-  { href: "#Урок", label: "Урок", description: "Zoom, тема, преподаватель" },
+  { href: "/student/lesson", label: "Урок", description: "открыть страницу урока" },
   { href: "#schedule-modal", label: "Расписание", description: "открыть календарь" },
   { href: "#Домашнее задание", label: "Домашка", description: "задания и проверка" },
 ];
@@ -27,19 +27,17 @@ export default function StudentDashboardPage() {
     >
       <div className="social-content-grid lesson-page-grid">
         <main className="social-wall">
-          <Panel title="Урок">
-            <LessonFocusCard
+          <Panel title="Ближайший урок">
+            <LessonSummaryCard
               counterpart={{
                 id: "T00001",
                 initials: "АБ",
                 meta: "English B1/B2 · быстрый ответ · Europe/Budapest",
                 name: "Анна Белова",
               }}
-              language="English B1"
+              lessonHref="/student/lesson"
               studentIds={studentScheduleIds}
               teacherIds={["T00001"]}
-              theme="Travel speaking + modal verbs"
-              title="Урок с преподавателем"
             />
           </Panel>
           <Panel title="Ближайшие занятия">

@@ -5,19 +5,18 @@ export default function HomePage() {
     <main className="auth-shell">
       <section className="auth-card">
         <p className="eyebrow">NeoSchool</p>
-        <h1>Техническая открытка платформы</h1>
+        <h1>Технический вход в платформу</h1>
         <p className="muted">
-          Временный вход без авторизации. Позже эти три кнопки можно подключить к полноценному
-          публичному сайту школы.
+          Выберите, в какой кабинет хотите войти. На следующем шаге будет вход или регистрация только для выбранной роли.
         </p>
         <div className="auth-form">
-          <Link className="button primary" href="/student/dashboard">
+          <Link className="button primary" href="/student">
             Кабинет ученика
           </Link>
-          <Link className="button" href="/teacher/dashboard">
+          <Link className="button" href="/teacher">
             Кабинет учителя
           </Link>
-          <Link className="button" href="/admin">
+          <Link className="button" href="/admin/login">
             Админ
           </Link>
         </div>

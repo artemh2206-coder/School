@@ -70,6 +70,20 @@ function durationMinutes(start: string | null, end: string | null) {
   return String(Math.max(0, Math.floor((new Date(end).getTime() - new Date(start).getTime()) / 60_000)));
 }
 
+function formatRetainTimer(session: AdminSessionDetail) {
+  if (session.transcriptPurgedAt) return `чат очищен ${formatDate(session.transcriptPurgedAt)}`;
+  if (!session.transcriptRetainUntil) return "таймер появится после завершения";
+
+  const ms = new Date(session.transcriptRetainUntil).getTime() - Date.now();
+  if (ms <= 0) return "чат ожидает очистки";
+
+  const totalHours = Math.ceil(ms / 3_600_000);
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+
+  return days > 0 ? `${days} д ${hours} ч до очистки чата` : `${hours} ч до очистки чата`;
+}
+
 export function AdminSessionDetails({
   initialSession,
   students,
@@ -132,6 +146,8 @@ export function AdminSessionDetails({
       ["Учитель", `${session.teacher.fullName} · ${session.teacher.id}`],
       ["Ученик", `${session.student.fullName} · ${session.student.id}`],
       ["Хранить переписку до", formatDate(session.transcriptRetainUntil)],
+      ["Таймер очистки чата", formatRetainTimer(session)],
+      ["Упрощенная запись", "ID сессии, учитель, ученик и время проведения хранятся бессрочно"],
     ],
     [session],
   );

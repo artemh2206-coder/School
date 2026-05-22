@@ -3,11 +3,15 @@ import { z } from "zod";
 import { db } from "@/server/db";
 
 const messageSchema = z.object({
-  body: z.string().trim().min(1).max(2000),
+  attachmentData: z.string().optional(),
+  attachmentMime: z.string().optional(),
+  attachmentName: z.string().optional(),
+  attachmentSize: z.number().int().max(2_500_000).optional(),
+  body: z.string().trim().max(2000),
   senderId: z.string().min(1),
   senderName: z.string().trim().min(1).max(120),
   senderRole: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
-});
+}).refine((value) => value.body.length > 0 || Boolean(value.attachmentData), "Message body or attachment is required");
 
 const deleteMessagesSchema = z.object({
   messageIds: z.array(z.string().min(1)).min(1).max(50),
@@ -67,6 +71,10 @@ async function getMessages(threadId: string) {
     },
     select: {
       body: true,
+      attachmentData: true,
+      attachmentMime: true,
+      attachmentName: true,
+      attachmentSize: true,
       createdAt: true,
       id: true,
       senderId: true,
@@ -106,6 +114,10 @@ export async function POST(request: Request, context: RouteContext) {
   await db.chatMessage.create({
     data: {
       body: payload.body,
+      attachmentData: payload.attachmentData,
+      attachmentMime: payload.attachmentMime,
+      attachmentName: payload.attachmentName,
+      attachmentSize: payload.attachmentSize,
       senderId: payload.senderId,
       senderName: payload.senderName,
       senderRole: payload.senderRole,

@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 const nav = [
   { href: "/admin", label: "Платформа", description: "главный экран" },
-  { href: "/admin/sessions", label: "Сессии", description: "уроки и наблюдение", newTab: true },
+  { href: "/admin/sessions", label: "Сессии", description: "уроки и наблюдение" },
   { href: "/admin/teachers", label: "Учителя", description: "список профилей" },
   { href: "/admin/students", label: "Ученики", description: "список профилей" },
   { href: "/admin/finance", label: "Финансы", description: "платежи и выводы" },
@@ -41,6 +41,7 @@ export default async function AdminTeacherProfilePage({
     <DashboardShell
       compactHeader
       hideProfileCard
+      logoutHref="/api/auth/logout"
       nav={nav}
       profile={{
         id: teacher.id,
@@ -50,8 +51,13 @@ export default async function AdminTeacherProfilePage({
         meta: "Профиль учителя",
       }}
       roleLabel="Админ"
+      scheduleEditable
+      scheduleTeacherId={teacher.id}
     >
       <Panel title="Профиль учителя">
+        <div className="admin-session-actions">
+          <a className="button primary" href="#schedule-modal">Посмотреть расписание</a>
+        </div>
         <AdminParticipantProfile participant={serializeParticipant(teacher)} />
       </Panel>
     </DashboardShell>

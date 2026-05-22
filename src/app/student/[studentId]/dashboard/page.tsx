@@ -43,6 +43,28 @@ export default async function StudentDashboardPage({
         id: "asc",
       },
     }));
+  const homeworkQueue = student
+    ? await db.lesson.findMany({
+        include: {
+          homework: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
+          },
+          teacher: true,
+        },
+        orderBy: {
+          actualEndedAt: "desc",
+        },
+        take: 10,
+        where: {
+          OR: [{ actualEndedAt: { not: null } }, { status: "COMPLETED" }],
+          studentId: student.id,
+        },
+      })
+    : [];
+  const pendingHomeworkLessons = homeworkQueue.filter((lesson) => lesson.homework[0]?.status !== "SUBMITTED");
 
   if (!student) notFound();
 
@@ -63,6 +85,7 @@ export default async function StudentDashboardPage({
         status: "Ученик · активный профиль",
         meta: "Europe/Budapest",
       }}
+      logoutHref="/api/auth/logout"
       roleLabel="Кабинет ученика"
     >
       <div className="social-content-grid lesson-page-grid">
@@ -84,10 +107,29 @@ export default async function StudentDashboardPage({
             <UpcomingLessons studentIds={[student.id]} />
           </Panel>
           <Panel title="Домашнее задание">
-            <div className="empty-state">Задания появятся после первых уроков.</div>
-          </Panel>
-          <Panel title="Профиль">
-            <Link className="button" href="/api/auth/logout">Выйти</Link>
+            {pendingHomeworkLessons.length ? (
+              <div className="list">
+                {pendingHomeworkLessons.map((lesson) => {
+                  const homework = lesson.homework[0];
+
+                  return (
+                    <div className="list-item" key={lesson.id}>
+                      <strong>{lesson.teacher.fullName} · {lesson.id}</strong>
+                      <span>
+                        {homework ? "Домашнее задание прикреплено · ожидает выполнения" : "Урок ждет прикрепления ДЗ учителем"}
+                      </span>
+                      {homework ? (
+                        <Link className="button" href={`/student/${student.id}/homework/${lesson.id}`}>
+                          Перейти к ДЗ
+                        </Link>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">Нет уроков, ожидающих домашнее задание.</div>
+            )}
           </Panel>
         </main>
       </div>

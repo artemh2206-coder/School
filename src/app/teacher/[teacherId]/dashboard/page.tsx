@@ -51,6 +51,31 @@ export default async function TeacherDashboardPage({
         },
       })
     : [];
+  const homeworkQueue = teacher
+    ? await db.lesson.findMany({
+        include: {
+          homework: {
+            orderBy: {
+              createdAt: "desc",
+            },
+            take: 1,
+          },
+          student: true,
+        },
+        orderBy: {
+          actualEndedAt: "desc",
+        },
+        take: 10,
+        where: {
+          OR: [{ actualEndedAt: { not: null } }, { status: "COMPLETED" }],
+          teacherId: teacher.id,
+        },
+      })
+    : [];
+  const pendingHomeworkLessons = homeworkQueue.filter((lesson) => {
+    const homework = lesson.homework[0];
+    return !homework || homework.status !== "SUBMITTED";
+  });
   const firstStudent = nextLesson?.student ?? students[0] ?? null;
 
   if (!teacher) notFound();
@@ -74,6 +99,7 @@ export default async function TeacherDashboardPage({
         status: "Преподаватель · активный профиль",
         meta: "Europe/Budapest",
       }}
+      logoutHref="/api/auth/logout"
       roleLabel="Кабинет учителя"
       scheduleEditable
       scheduleTeacherId={teacher.id}
@@ -99,6 +125,29 @@ export default async function TeacherDashboardPage({
           <Panel title="Ближайшие занятия">
             <UpcomingLessons teacherIds={[teacher.id]} />
           </Panel>
+          <Panel title="Домашнее задание после урока">
+            {pendingHomeworkLessons.length ? (
+              <div className="list">
+                {pendingHomeworkLessons.map((lesson) => {
+                  const homework = lesson.homework[0];
+
+                  return (
+                    <div className="list-item" key={lesson.id}>
+                      <strong>{lesson.student.fullName} · {lesson.id}</strong>
+                      <span>
+                        {homework ? "Домашнее задание прикреплено · ученик еще не отметил выполнение" : "Домашнее задание не прикреплено"}
+                      </span>
+                      <Link className="button" href={`/teacher/${teacher.id}/homework/${lesson.id}`}>
+                        {homework ? "Редактировать ДЗ" : "Прикрепить ДЗ"}
+                      </Link>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="empty-state">Нет завершенных уроков, ожидающих ДЗ.</div>
+            )}
+          </Panel>
           <Panel title="Ученики">
             {students.length ? (
               <div className="list">
@@ -112,9 +161,6 @@ export default async function TeacherDashboardPage({
             ) : (
               <div className="empty-state">Пока нет учеников в расписании этого учителя.</div>
             )}
-          </Panel>
-          <Panel title="Профиль">
-            <Link className="button" href="/api/auth/logout">Выйти</Link>
           </Panel>
         </main>
       </div>

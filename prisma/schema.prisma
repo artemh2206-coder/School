@@ -305,14 +305,18 @@ model ChatMember {
 }
 
 model ChatMessage {
-  id        String     @id @default(cuid())
-  threadId  String
-  senderId  String
-  senderName String?
-  senderRole UserRole?
-  body      String
-  createdAt DateTime   @default(now())
-  thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  id             String     @id @default(cuid())
+  threadId       String
+  senderId       String
+  senderName     String?
+  senderRole     UserRole?
+  body           String
+  attachmentName String?
+  attachmentMime String?
+  attachmentSize Int?
+  attachmentData String?
+  createdAt      DateTime   @default(now())
+  thread         ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@index([threadId, createdAt])
 }

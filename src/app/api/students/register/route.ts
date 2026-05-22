@@ -13,5 +13,5 @@ export async function POST(request: Request) {
   });
 
   const id = await createParticipant("STUDENT", payload.fullName);
-  redirect(`/login?role=STUDENT&participantId=${id}`);
+  redirect(`/student/login?participantId=${id}`);
 }

@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 const nav = [
   { href: "/admin", label: "Платформа", description: "главный экран" },
-  { href: "/admin/sessions", label: "Сессии", description: "уроки и наблюдение", newTab: true },
+  { href: "/admin/sessions", label: "Сессии", description: "уроки и наблюдение" },
   { href: "/admin/teachers", label: "Учителя", description: "список профилей" },
   { href: "/admin/students", label: "Ученики", description: "список профилей" },
   { href: "/admin/finance", label: "Финансы", description: "платежи и выводы" },
@@ -15,6 +15,7 @@ export default function AdminFinancePage() {
     <DashboardShell
       compactHeader
       hideProfileCard
+      logoutHref="/api/auth/logout"
       nav={nav}
       profile={{
         initials: "AD",

@@ -41,6 +41,8 @@ export async function GET() {
         lesson.presences.some((presence) => presence.role === "TEACHER"),
       startsAt: lesson.startsAt.toISOString(),
       status: lesson.status,
+      transcriptPurgedAt: lesson.transcriptPurgedAt?.toISOString() ?? null,
+      transcriptRetainUntil: lesson.transcriptRetainUntil?.toISOString() ?? null,
       student: {
         fullName: lesson.student.fullName,
         id: lesson.studentId,

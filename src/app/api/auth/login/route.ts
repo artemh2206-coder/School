@@ -4,7 +4,7 @@ import { z } from "zod";
 import { db } from "@/server/db";
 
 const schema = z.object({
-  participantId: z.string().optional().or(z.literal("")),
+  identifier: z.string().optional().or(z.literal("")),
   password: z.string().optional(),
   role: z.enum(["STUDENT", "TEACHER", "ADMIN"]),
 });
@@ -12,33 +12,50 @@ const schema = z.object({
 export async function POST(request: Request) {
   const formData = await request.formData();
   const payload = schema.parse({
-    participantId: formData.get("participantId"),
+    identifier: formData.get("identifier"),
     password: formData.get("password"),
     role: formData.get("role"),
   });
-  const participantId = payload.participantId?.trim().toUpperCase() ?? "";
+  const identifier = payload.identifier?.trim() ?? "";
+  const normalizedId = identifier.toUpperCase();
 
   let redirectTo = "/admin";
 
   if (payload.role === "STUDENT") {
     const student =
-      (participantId
-        ? await db.studentProfile.findUnique({ select: { id: true }, where: { id: participantId } })
+      (identifier
+        ? await db.studentProfile.findFirst({
+            select: { id: true },
+            where: {
+              OR: [
+                { id: normalizedId },
+                { fullName: { equals: identifier, mode: "insensitive" } },
+              ],
+            },
+          })
         : null) ??
       (await db.studentProfile.findFirst({ orderBy: { id: "asc" }, select: { id: true } }));
 
-    if (!student) redirect("/login?role=STUDENT");
+    if (!student) redirect("/student/login");
     redirectTo = `/student/${student.id}/dashboard`;
   }
 
   if (payload.role === "TEACHER") {
     const teacher =
-      (participantId
-        ? await db.teacherProfile.findUnique({ select: { id: true }, where: { id: participantId } })
+      (identifier
+        ? await db.teacherProfile.findFirst({
+            select: { id: true },
+            where: {
+              OR: [
+                { id: normalizedId },
+                { fullName: { equals: identifier, mode: "insensitive" } },
+              ],
+            },
+          })
         : null) ??
       (await db.teacherProfile.findFirst({ orderBy: { id: "asc" }, select: { id: true } }));
 
-    if (!teacher) redirect("/login?role=TEACHER");
+    if (!teacher) redirect("/teacher/login");
     redirectTo = `/teacher/${teacher.id}/dashboard`;
   }
 

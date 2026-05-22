@@ -159,6 +159,10 @@ export function ScheduleCalendar({ editable = false, teacherId = defaultTeacherI
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const weeks = getWeeksInMonth(month);
   const weekDays = getWeekDays(month, week);
+  const calendarLessons = useMemo(
+    () => lessons.filter((lesson) => lesson.teacherId === teacherId),
+    [lessons, teacherId],
+  );
 
   useEffect(() => {
     let active = true;
@@ -216,7 +220,7 @@ export function ScheduleCalendar({ editable = false, teacherId = defaultTeacherI
       <div className="calendar-row" key={hour}>
         <div className="calendar-hour">{formatHour(hour)}</div>
         {weekDays.map((day) => {
-          const lesson = lessons.find(
+          const lesson = calendarLessons.find(
             (item) =>
               item.month === month &&
               item.week === week &&
@@ -287,7 +291,7 @@ export function ScheduleCalendar({ editable = false, teacherId = defaultTeacherI
               <strong>{item.label} {monthNames[month].toLowerCase()}</strong>
               <span>
                 {
-                  lessons.filter((lesson) => lesson.month === month && lesson.week === item.week)
+                  calendarLessons.filter((lesson) => lesson.month === month && lesson.week === item.week)
                     .length
                 } занятий
               </span>
@@ -336,7 +340,7 @@ export function ScheduleCalendar({ editable = false, teacherId = defaultTeacherI
           <div className="calendar-row" key={hour}>
             <div className="calendar-hour">{formatHour(hour)}</div>
             {weekDays.map((day) => {
-              const lesson = lessons.find(
+              const lesson = calendarLessons.find(
                 (item) =>
                   item.month === month &&
                   item.week === week &&

@@ -21,6 +21,7 @@ export function DashboardShell({
   children,
   coverSlot,
   hideProfileCard = false,
+  logoutHref,
   nav,
   profile,
   roleLabel,
@@ -31,6 +32,7 @@ export function DashboardShell({
   children: ReactNode;
   coverSlot?: ReactNode;
   hideProfileCard?: boolean;
+  logoutHref?: string;
   nav: NavItem[];
   profile: Profile;
   roleLabel: string;
@@ -38,7 +40,7 @@ export function DashboardShell({
   scheduleEditable?: boolean;
   scheduleTeacherId?: string;
 }) {
-  const hasSchedule = nav.some((item) => item.href === "#schedule-modal");
+  const hasSchedule = scheduleEditable || nav.some((item) => item.href === "#schedule-modal");
 
   return (
     <main className="social-shell">
@@ -70,6 +72,11 @@ export function DashboardShell({
             </h1>
           </div>
           {coverSlot ? <div className="cover-slot">{coverSlot}</div> : null}
+          {logoutHref ? (
+            <Link className="button header-logout" href={logoutHref}>
+              Выйти
+            </Link>
+          ) : null}
         </header>
 
         <section className={`profile-layout ${hideProfileCard ? "without-profile-card" : ""}`}>

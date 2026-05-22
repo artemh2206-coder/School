@@ -34,12 +34,16 @@ const demoUsers: Record<Role, SessionUser> = {
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
   const cookieStore = await cookies();
   const role = cookieStore.get("school_os_role")?.value;
+  const participantId = cookieStore.get("school_os_participant_id")?.value;
 
   if (!isRole(role)) {
     return null;
   }
 
-  return demoUsers[role];
+  return {
+    ...demoUsers[role],
+    id: participantId ?? demoUsers[role].id,
+  };
 });
 
 export async function requireUser() {

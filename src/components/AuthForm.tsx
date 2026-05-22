@@ -1,27 +1,34 @@
 import Link from "next/link";
 
-export function LoginForm({ title = "Вход в платформу" }: { title?: string }) {
+export function LoginForm({
+  participantId = "",
+  role = "STUDENT",
+  title = "Вход в платформу",
+}: {
+  participantId?: string;
+  role?: "ADMIN" | "STUDENT" | "TEACHER";
+  title?: string;
+}) {
   return (
     <main className="auth-shell">
       <section className="auth-card">
         <p className="eyebrow">Authentication</p>
         <h1>{title}</h1>
         <p className="muted">
-          В production здесь будет email/password, Google login и телефон. Сейчас вход ставит
-          demo-сессию, чтобы строить кабинеты и API.
+          Сейчас вход упрощен: выберите роль и укажите ID профиля, который был выдан при регистрации.
         </p>
         <form className="auth-form" action="/api/auth/login" method="post">
           <label>
             Роль
-            <select name="role" defaultValue="STUDENT">
+            <select name="role" defaultValue={role}>
               <option value="STUDENT">Ученик</option>
               <option value="TEACHER">Учитель</option>
               <option value="ADMIN">Админ</option>
             </select>
           </label>
           <label>
-            Email
-            <input name="email" placeholder="name@example.com" type="email" />
+            ID профиля
+            <input name="participantId" placeholder="S00001 или T00001" defaultValue={participantId} />
           </label>
           <label>
             Пароль
@@ -30,8 +37,8 @@ export function LoginForm({ title = "Вход в платформу" }: { title?
           <button className="button primary" type="submit">Войти</button>
         </form>
         <p className="form-help">
-          Ученики регистрируются через <Link href="/student/register">запись на курс</Link>, а
-          учителя отправляют <Link href="/teacher/apply">CV на проверку</Link>.
+          Ученики регистрируются через <Link href="/student/register">регистрацию ученика</Link>, учителя через{" "}
+          <Link href="/teacher/register">регистрацию учителя</Link>.
         </p>
       </section>
     </main>

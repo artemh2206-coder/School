@@ -90,6 +90,7 @@ export function LessonSummaryCard({
 
   const lessonDate = nextLesson ? new Date(nextLesson.startsAtIso) : null;
   const timeLeft = nextLesson ? getTimeLeft(nextLesson.startsAtIso, now) : null;
+  const lessonUrl = nextLesson ? `${lessonHref}?lessonId=${encodeURIComponent(nextLesson.id)}` : lessonHref;
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -127,7 +128,7 @@ export function LessonSummaryCard({
         </div>
       </div>
 
-      <Link className={`lesson-summary-action ${nextLesson ? "" : "disabled"}`} href={lessonHref}>
+      <Link className={`lesson-summary-action ${nextLesson ? "" : "disabled"}`} href={lessonUrl} target="_blank">
         Подключиться к уроку
       </Link>
     </div>

@@ -5,32 +5,14 @@ export default function TeacherApplyPage() {
     <main className="site-shell">
       <MarketingNav />
       <section className="auth-card" style={{ margin: "18px auto 0" }}>
-        <p className="eyebrow">Заявка преподавателя</p>
-        <h1>Отправить CV</h1>
+        <p className="eyebrow">Регистрация учителя</p>
+        <h1>Создать профиль учителя</h1>
         <form className="auth-form" action="/api/teacher-applications" method="post">
-          <div className="field-row">
-            <label>
-              Имя
-              <input name="fullName" placeholder="Ваше имя" required />
-            </label>
-            <label>
-              Телефон
-              <input name="phone" placeholder="+380 / +48 / +49" />
-            </label>
-          </div>
           <label>
-            Email
-            <input name="email" placeholder="teacher@example.com" required type="email" />
+            Имя и фамилия
+            <input name="fullName" placeholder="Например: Анна Смирнова" required />
           </label>
-          <label>
-            Ссылка на CV / портфолио
-            <input name="cvUrl" placeholder="https://..." />
-          </label>
-          <label>
-            Комментарий
-            <textarea name="note" placeholder="Опыт, языки, специализация" />
-          </label>
-          <button className="button primary" type="submit">Отправить на проверку</button>
+          <button className="button primary" type="submit">Зарегистрировать учителя</button>
         </form>
       </section>
     </main>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { defaultTeacherId, studentRoster } from "@/lib/school-ids";
+import { defaultTeacherId } from "@/lib/school-ids";
 import type { LessonWithTiming } from "@/lib/schedule-store";
 
 const weekLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -87,6 +87,12 @@ async function fetchLessons() {
   return data.lessons;
 }
 
+async function fetchStudents() {
+  const response = await fetch("/api/students", { cache: "no-store" });
+  const data = (await response.json()) as { students: { fullName: string; id: string }[] };
+  return data.students;
+}
+
 export function useLessons() {
   const [lessons, setLessons] = useState<LessonWithTiming[]>([]);
 
@@ -142,19 +148,41 @@ export function UpcomingLessons({ studentIds, teacherIds }: { studentIds?: strin
   );
 }
 
-export function ScheduleCalendar({ editable = false }: { editable?: boolean }) {
+export function ScheduleCalendar({ editable = false, teacherId = defaultTeacherId }: { editable?: boolean; teacherId?: string }) {
   const { lessons, setLessons } = useLessons();
+  const [students, setStudents] = useState<{ fullName: string; id: string }[]>([]);
   const [isMonth, setIsMonth] = useState(false);
   const [isNightOpen, setIsNightOpen] = useState(false);
   const [month, setMonth] = useState(4);
   const [week, setWeek] = useState(0);
   const [draft, setDraft] = useState<{ day: number; start: number } | null>(null);
-  const [selectedStudentId, setSelectedStudentId] = useState(studentRoster[0].id);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
   const weeks = getWeeksInMonth(month);
   const weekDays = getWeekDays(month, week);
 
+  useEffect(() => {
+    let active = true;
+
+    async function syncStudents() {
+      try {
+        const next = await fetchStudents();
+        if (!active) return;
+        setStudents(next);
+        setSelectedStudentId((current) => current || next[0]?.id || "");
+      } catch {
+        if (active) setStudents((current) => current);
+      }
+    }
+
+    syncStudents();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   async function add() {
-    if (!draft) return;
+    if (!draft || !selectedStudentId) return;
 
     const response = await fetch("/api/schedule", {
       body: JSON.stringify({
@@ -162,7 +190,7 @@ export function ScheduleCalendar({ editable = false }: { editable?: boolean }) {
         month,
         start: draft.start,
         studentId: selectedStudentId,
-        teacherId: defaultTeacherId,
+        teacherId,
         week,
       }),
       headers: { "Content-Type": "application/json" },
@@ -348,13 +376,17 @@ export function ScheduleCalendar({ editable = false }: { editable?: boolean }) {
           <strong>
             Добавить урок: {weekLabels[draft.day]} {formatLessonTime(draft.start, draft.start + 1)}
           </strong>
-          <select onChange={(event) => setSelectedStudentId(event.target.value)} value={selectedStudentId}>
-            {studentRoster.map((student) => (
-              <option key={student.id} value={student.id}>{student.id} · {student.name}</option>
-            ))}
-          </select>
+          {students.length ? (
+            <select onChange={(event) => setSelectedStudentId(event.target.value)} value={selectedStudentId}>
+              {students.map((student) => (
+                <option key={student.id} value={student.id}>{student.id} · {student.fullName}</option>
+              ))}
+            </select>
+          ) : (
+            <span>Сначала зарегистрируйте ученика.</span>
+          )}
           <div>
-            <button onClick={add} type="button">Добавить</button>
+            <button disabled={!selectedStudentId} onClick={add} type="button">Добавить</button>
             <button onClick={() => setDraft(null)} type="button">Отмена</button>
           </div>
         </div>

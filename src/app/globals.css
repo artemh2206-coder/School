@@ -523,11 +523,26 @@ p {
   line-height: 0.96;
 }
 
+.social-cover.compact {
+  min-height: 88px;
+  border-radius: 14px 14px 0 0;
+  padding: 18px 24px;
+}
+
+.social-cover.compact h1 {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
 .profile-layout {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
   gap: 18px;
   align-items: start;
+}
+
+.profile-layout.without-profile-card {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .profile-card,
@@ -1036,6 +1051,7 @@ p {
 
 .lesson-room-shell {
   position: relative;
+  overflow: hidden;
   min-height: 100vh;
   background: #0f1720;
   color: #fff;
@@ -1045,12 +1061,15 @@ p {
   position: absolute;
   top: 16px;
   right: 16px;
-  z-index: 2;
+  left: 16px;
+  z-index: 4;
   display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 8px;
+  pointer-events: none;
 }
 
-.lesson-room-toolbar a,
 .lesson-room-toolbar button {
   display: inline-flex;
   align-items: center;
@@ -1066,6 +1085,7 @@ p {
   font-size: 13px;
   font-weight: 800;
   backdrop-filter: blur(12px);
+  pointer-events: auto;
 }
 
 .lesson-room-toolbar button:hover,
@@ -1073,8 +1093,212 @@ p {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.lesson-room-empty {
+.lesson-room-danger {
+  border-color: rgba(255, 104, 104, 0.34) !important;
+  background: rgba(214, 61, 61, 0.82) !important;
+}
+
+.lesson-room-stage {
+  display: grid;
   min-height: 100vh;
+  transition: grid-template-columns 220ms ease;
+}
+
+.lesson-room-shell.chat-open .lesson-room-stage {
+  grid-template-columns: minmax(0, 60fr) minmax(360px, 40fr);
+}
+
+.lesson-room-shell.chat-closed .lesson-room-stage {
+  grid-template-columns: minmax(0, 1fr) 0;
+}
+
+.lesson-room-video {
+  min-width: 0;
+  padding: 76px 18px 18px;
+}
+
+.lesson-room-video-placeholder {
+  display: grid;
+  min-height: calc(100vh - 94px);
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background:
+    linear-gradient(135deg, rgba(32, 48, 65, 0.88), rgba(15, 23, 32, 0.96)),
+    #111c27;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.lesson-room-video-placeholder span {
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.lesson-room-chat {
+  position: relative;
+  min-width: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  background: #f7fbff;
+  color: #1f2d3d;
+  transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.lesson-room-shell.chat-closed .lesson-room-chat {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lesson-room-chat-toggle {
+  position: fixed;
+  top: 82px;
+  right: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 142px;
+  height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-right: 0;
+  border-radius: 14px 0 0 14px;
+  background: rgba(247, 251, 255, 0.96);
+  color: #24496d;
+  padding: 0 12px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
+  pointer-events: auto;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.lesson-room-shell.chat-open .lesson-room-chat-toggle {
+  right: calc(40% - 1px);
+}
+
+.lesson-room-chat-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  min-height: 100vh;
+  padding: 76px 16px 16px;
+}
+
+.lesson-room-chat-panel header {
+  border-bottom: 1px solid #d7e2ed;
+  padding-bottom: 14px;
+}
+
+.lesson-room-chat-panel header span,
+.lesson-room-chat-panel header strong {
+  display: block;
+}
+
+.lesson-room-chat-panel header span {
+  color: #6d8094;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.lesson-room-chat-panel header strong {
+  margin-top: 5px;
+  color: #1f2d3d;
+  font-size: 24px;
+}
+
+.lesson-room-chat-feed {
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 0;
+}
+
+.lesson-room-message {
+  width: fit-content;
+  max-width: min(82%, 420px);
+  margin-bottom: 10px;
+  border: 1px solid #d7e2ed;
+  border-radius: 14px;
+  background: #fff;
+  padding: 9px 11px;
+}
+
+.lesson-room-message.own {
+  margin-left: auto;
+  border-color: #bdd4ea;
+  background: #e8f4ff;
+}
+
+.lesson-room-message.system {
+  margin-inline: auto;
+  border-color: #d7e2ed;
+  background: #f4f7fa;
+  text-align: center;
+}
+
+.lesson-room-message span,
+.lesson-room-message p,
+.lesson-room-chat-note {
+  display: block;
+}
+
+.lesson-room-message span {
+  color: #6d8094;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.lesson-room-message p {
+  margin: 4px 0 0;
+  color: #1f2d3d;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.lesson-room-chat-note {
+  border: 1px dashed #bdd4ea;
+  border-radius: 14px;
+  background: #f7fbff;
+  color: #6d8094;
+  padding: 12px;
+  font-size: 13px;
+}
+
+.lesson-room-chat-form {
+  display: flex;
+  gap: 8px;
+  border-top: 1px solid #d7e2ed;
+  padding-top: 12px;
+}
+
+.lesson-room-chat-form input {
+  min-width: 0;
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid #bdd4ea;
+  border-radius: 12px;
+  background: #fff;
+  color: #1f2d3d;
+  padding: 0 12px;
+}
+
+.lesson-room-chat-form button {
+  min-height: 42px;
+  border: 1px solid #235c91;
+  border-radius: 12px;
+  background: #2f6fae;
+  color: #fff;
+  padding: 0 14px;
+  font-weight: 850;
+}
+
+.lesson-room-chat-form button:disabled,
+.lesson-room-chat-form input:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .lesson-focus-card {
@@ -1701,6 +1925,195 @@ p {
   font-size: 13px;
 }
 
+.admin-sessions-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-session-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(120px, 0.7fr) minmax(120px, 0.7fr) minmax(150px, 0.8fr) minmax(170px, 0.9fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #d7e2ed;
+  border-radius: 16px;
+  background: #fbfdff;
+  padding: 13px;
+  text-decoration: none;
+}
+
+.admin-session-row:hover {
+  border-color: #78a9d7;
+  background: #f1f7fd;
+}
+
+.admin-session-row strong,
+.admin-session-row span,
+.admin-session-row small {
+  display: block;
+}
+
+.admin-session-row span,
+.admin-session-row small {
+  color: #6d8094;
+  font-size: 12px;
+}
+
+.admin-session-row strong {
+  margin-top: 3px;
+  color: #1f2d3d;
+  font-size: 14px;
+}
+
+.admin-session-status {
+  justify-self: start;
+  border: 1px solid #bdd4ea;
+  border-radius: 999px;
+  background: #e8f4ff;
+  color: #2f6fae;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.admin-session-status.active {
+  border-color: #a8d7b8;
+  background: #e8f8ee;
+  color: #22735f;
+}
+
+.admin-session-status.done {
+  border-color: #d7e2ed;
+  background: #f4f7fa;
+  color: #5c6b79;
+}
+
+.admin-session-status.paused {
+  border-color: #ebd491;
+  background: #fff7df;
+  color: #80651c;
+}
+
+.admin-session-status.cancelled {
+  border-color: #efb3b3;
+  background: #fff0f0;
+  color: #b23a3a;
+}
+
+.admin-participants-list {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-participant-row {
+  align-items: center;
+  border: 1px solid #d7e2ed;
+  border-radius: 8px;
+  color: inherit;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1.2fr 0.9fr 0.7fr 1fr 1.3fr;
+  padding: 14px;
+  text-decoration: none;
+}
+
+.admin-participant-row:hover {
+  border-color: #78a9d7;
+  background: #f1f7fd;
+}
+
+.admin-participant-row div,
+.admin-profile-details div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-participant-row span,
+.admin-profile-details span {
+  color: #6d8094;
+  font-size: 12px;
+}
+
+.admin-participant-row strong,
+.admin-profile-details strong {
+  color: #1f2d3d;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.online-text {
+  color: #22735f !important;
+}
+
+.empty-state {
+  border: 1px dashed #bdd4ea;
+  border-radius: 8px;
+  color: #6d8094;
+  padding: 18px;
+}
+
+.admin-profile-details {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-session-details {
+  display: grid;
+  gap: 18px;
+}
+
+.admin-session-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button.danger {
+  border-color: #efb3b3;
+  background: #fff0f0;
+  color: #b23a3a;
+}
+
+.admin-session-edit {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid #d7e2ed;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.admin-session-edit label {
+  display: grid;
+  gap: 6px;
+  color: #526476;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-session-edit input,
+.admin-session-edit select {
+  width: 100%;
+  border: 1px solid #bdd4ea;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #1f2d3d;
+  font: inherit;
+}
+
+.admin-session-chat-history {
+  display: grid;
+  gap: 10px;
+}
+
+.admin-session-chat-history h3 {
+  margin: 0;
+  color: #1f2d3d;
+  font-size: 18px;
+}
+
 @media (max-width: 1120px) {
   .social-shell,
   .profile-layout,
@@ -1729,6 +2142,14 @@ p {
 
   .profile-card {
     position: static;
+  }
+
+  .admin-session-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-participant-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -1759,5 +2180,90 @@ p {
 
   .year-months {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-session-row {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-participant-row,
+  .admin-profile-details,
+  .admin-session-edit {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-room-toolbar {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .lesson-room-toolbar a,
+  .lesson-room-toolbar button {
+    min-height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .lesson-room-stage,
+  .lesson-room-shell.chat-open .lesson-room-stage,
+  .lesson-room-shell.chat-closed .lesson-room-stage {
+    display: block;
+  }
+
+  .lesson-room-video {
+    min-height: 100vh;
+    padding: 118px 10px 10px;
+  }
+
+  .lesson-room-video-placeholder {
+    min-height: calc(100vh - 128px);
+    border-radius: 16px;
+  }
+
+  .lesson-room-chat {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 5;
+    height: min(62vh, 520px);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+    border-left: 0;
+    transform: translateY(0);
+  }
+
+  .lesson-room-shell.chat-closed .lesson-room-chat {
+    transform: translateY(calc(100% - 44px));
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .lesson-room-chat-toggle,
+  .lesson-room-shell.chat-open .lesson-room-chat-toggle {
+    position: fixed;
+    top: auto;
+    right: 12px;
+    bottom: min(62vh, 520px);
+    left: auto;
+    min-width: 132px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-bottom: 0;
+    border-radius: 14px 14px 0 0;
+    box-shadow: 0 -12px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  .lesson-room-shell.chat-closed .lesson-room-chat-toggle {
+    bottom: 0;
+  }
+
+  .lesson-room-chat-panel {
+    min-height: 100%;
+    height: 100%;
+    padding: 14px;
+  }
+
+  .lesson-room-chat-form {
+    flex-direction: column;
   }
 }

@@ -3,9 +3,10 @@ import type { ReactNode } from "react";
 import { ScheduleCalendar } from "./ScheduleCalendar";
 
 type NavItem = {
+  description: string;
   href: string;
   label: string;
-  description: string;
+  newTab?: boolean;
 };
 
 type Profile = {
@@ -19,17 +20,23 @@ type Profile = {
 export function DashboardShell({
   children,
   coverSlot,
+  hideProfileCard = false,
   nav,
   profile,
   roleLabel,
+  compactHeader = false,
   scheduleEditable = false,
+  scheduleTeacherId,
 }: {
   children: ReactNode;
   coverSlot?: ReactNode;
+  hideProfileCard?: boolean;
   nav: NavItem[];
   profile: Profile;
   roleLabel: string;
+  compactHeader?: boolean;
   scheduleEditable?: boolean;
+  scheduleTeacherId?: string;
 }) {
   const hasSchedule = nav.some((item) => item.href === "#schedule-modal");
 
@@ -41,7 +48,12 @@ export function DashboardShell({
         </Link>
         <nav className="social-tabs" aria-label={roleLabel}>
           {nav.map((item) => (
-            <a href={item.href} key={item.href}>
+            <a
+              href={item.href}
+              key={item.href}
+              rel={item.newTab || item.href.includes("/lesson") ? "noreferrer" : undefined}
+              target={item.newTab || item.href.includes("/lesson") ? "_blank" : undefined}
+            >
               <strong>{item.label}</strong>
               <span>{item.description}</span>
             </a>
@@ -50,7 +62,7 @@ export function DashboardShell({
       </aside>
 
       <section className="social-main">
-        <header className="social-cover">
+        <header className={`social-cover ${compactHeader ? "compact" : ""}`}>
           <div>
             <p>{roleLabel}</p>
             <h1>
@@ -60,15 +72,17 @@ export function DashboardShell({
           {coverSlot ? <div className="cover-slot">{coverSlot}</div> : null}
         </header>
 
-        <section className="profile-layout">
-          <aside className="profile-card">
-            <div className="profile-photo">{profile.initials}</div>
-            <h2>
-              {profile.name} {profile.id ? <span className="profile-id">{profile.id}</span> : null}
-            </h2>
-            <p>{profile.meta}</p>
-            <span className="profile-status">{profile.status}</span>
-          </aside>
+        <section className={`profile-layout ${hideProfileCard ? "without-profile-card" : ""}`}>
+          {hideProfileCard ? null : (
+            <aside className="profile-card">
+              <div className="profile-photo">{profile.initials}</div>
+              <h2>
+                {profile.name} {profile.id ? <span className="profile-id">{profile.id}</span> : null}
+              </h2>
+              <p>{profile.meta}</p>
+              <span className="profile-status">{profile.status}</span>
+            </aside>
+          )}
 
           <div className="profile-feed">{children}</div>
         </section>
@@ -86,7 +100,7 @@ export function DashboardShell({
                 Закрыть
               </a>
             </div>
-            <ScheduleCalendar editable={scheduleEditable} />
+            <ScheduleCalendar editable={scheduleEditable} teacherId={scheduleTeacherId} />
           </div>
         </div>
       ) : null}

@@ -1,58 +1,28 @@
-import { DashboardShell, Panel } from "@/components/DashboardShell";
-import { LessonSummaryCard } from "@/components/LessonFocusCard";
-import { UpcomingLessons } from "@/components/ScheduleCalendar";
+import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { db } from "@/server/db";
 
-const studentName = "Марк Волков";
-const studentId = "S00001";
-const studentScheduleIds = [studentId];
+export const dynamic = "force-dynamic";
 
-const nav = [
-  { href: "/student/lesson", label: "Урок", description: "открыть страницу урока" },
-  { href: "#schedule-modal", label: "Расписание", description: "открыть календарь" },
-  { href: "#Домашнее задание", label: "Домашка", description: "задания и проверка" },
-];
+export default async function StudentDashboardRedirectPage() {
+  const cookieStore = await cookies();
+  const participantId = cookieStore.get("school_os_participant_id")?.value;
+  const student =
+    (participantId
+      ? await db.studentProfile.findUnique({ select: { id: true }, where: { id: participantId } })
+      : null) ??
+    (await db.studentProfile.findFirst({ orderBy: { id: "asc" }, select: { id: true } }));
 
-export default function StudentDashboardPage() {
+  if (student) redirect(`/student/${student.id}/dashboard`);
+
   return (
-    <DashboardShell
-      nav={nav}
-      profile={{
-        id: studentId,
-        initials: "МВ",
-        name: studentName,
-        status: "Ученик · активный пакет",
-        meta: "English B1 · 6 уроков на балансе · Europe/Budapest",
-      }}
-      roleLabel="Кабинет ученика"
-    >
-      <div className="social-content-grid lesson-page-grid">
-        <main className="social-wall">
-          <Panel title="Ближайший урок">
-            <LessonSummaryCard
-              counterpart={{
-                id: "T00001",
-                initials: "АБ",
-                meta: "English B1/B2 · быстрый ответ · Europe/Budapest",
-                name: "Анна Белова",
-              }}
-              lessonHref="/student/lesson"
-              studentIds={studentScheduleIds}
-              teacherIds={["T00001"]}
-            />
-          </Panel>
-          <Panel title="Ближайшие занятия">
-            <UpcomingLessons studentIds={studentScheduleIds} />
-          </Panel>
-          <Panel title="Домашнее задание">
-            <div className="list">
-              <div className="list-item">
-                <strong>Speaking cards + grammar drill</strong>
-                <span>Дедлайн: пятница, 20:00 · статус: назначено</span>
-              </div>
-            </div>
-          </Panel>
-        </main>
-      </div>
-    </DashboardShell>
+    <main className="site-shell">
+      <section className="auth-card" style={{ margin: "18px auto 0" }}>
+        <p className="eyebrow">Кабинет ученика</p>
+        <h1>Пока нет профиля ученика</h1>
+        <Link className="button primary" href="/student/register">Зарегистрировать ученика</Link>
+      </section>
+    </main>
   );
 }

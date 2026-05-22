@@ -4,5 +4,6 @@ import { redirect } from "next/navigation";
 export async function GET() {
   const cookieStore = await cookies();
   cookieStore.delete("school_os_role");
+  cookieStore.delete("school_os_participant_id");
   redirect("/");
 }

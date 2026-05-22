@@ -33,6 +33,34 @@ type DbLesson = {
   };
 };
 
+function createLessonId() {
+  let id = "U";
+
+  for (let index = 0; index < 10; index += 1) {
+    id += Math.floor(Math.random() * 10);
+  }
+
+  return id;
+}
+
+async function createUniqueLessonId() {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const id = createLessonId();
+    const existing = await db.lesson.findUnique({
+      select: {
+        id: true,
+      },
+      where: {
+        id,
+      },
+    });
+
+    if (!existing) return id;
+  }
+
+  throw new Error("Could not allocate lesson id");
+}
+
 export function getLessonStartDate(lesson: Pick<Lesson, "day" | "month" | "start" | "week">) {
   const firstDayOfMonth = new Date(Date.UTC(2026, lesson.month, 1));
   const mondayOffset = (firstDayOfMonth.getUTCDay() + 6) % 7;
@@ -128,6 +156,7 @@ export async function addLesson(input: Omit<Lesson, "id" | "end" | "student">) {
   return db.lesson.create({
     data: {
       endsAt,
+      id: await createUniqueLessonId(),
       startsAt,
       studentId: input.studentId,
       teacherId: input.teacherId,

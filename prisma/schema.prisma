@@ -209,11 +209,17 @@ model Lesson {
   status      LessonStatus   @default(SCHEDULED)
   zoomUrl     String?
   notes       String?
+  actualStartedAt DateTime?
+  actualEndedAt   DateTime?
+  transcriptRetainUntil DateTime?
+  transcriptPurgedAt    DateTime?
   course      Course?        @relation(fields: [courseId], references: [id])
   student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
   teacher     TeacherProfile @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   homework    Homework[]
   materials   MaterialAccess[]
+  chatThread  ChatThread?
+  presences   LessonPresence[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -275,7 +281,9 @@ model Homework {
 
 model ChatThread {
   id        String       @id @default(cuid())
+  lessonId  String?      @unique
   title     String?
+  lesson    Lesson?      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   members   ChatMember[]
   messages  ChatMessage[]
   createdAt DateTime     @default(now())
@@ -300,11 +308,27 @@ model ChatMessage {
   id        String     @id @default(cuid())
   threadId  String
   senderId  String
+  senderName String?
+  senderRole UserRole?
   body      String
   createdAt DateTime   @default(now())
   thread    ChatThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
 
   @@index([threadId, createdAt])
+}
+
+model LessonPresence {
+  id             String   @id @default(cuid())
+  lessonId       String
+  participantId  String
+  role           UserRole
+  connectedAt    DateTime @default(now())
+  lastSeenAt     DateTime @default(now())
+  disconnectedAt DateTime?
+  lesson         Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([lessonId, participantId, role])
+  @@index([lessonId, role, lastSeenAt])
 }
 
 model Payment {

@@ -34,11 +34,13 @@ type ChatMessage = {
 
 type ImageEditorState = {
   data: string;
+  messageId: string;
   name: string;
 };
 
 type EditorText = {
   color: string;
+  fontSize: number;
   id: string;
   text: string;
   x: number;
@@ -46,58 +48,90 @@ type EditorText = {
 };
 
 type EditorSnapshot = {
-  imageData: string;
+  drawingData: string;
   texts: EditorText[];
 };
 
-function ImageEditorModal({ image, onClose }: { image: ImageEditorState; onClose: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+function ImageEditorModal({
+  image,
+  onClose,
+  onSave,
+}: {
+  image: ImageEditorState;
+  onClose: () => void;
+  onSave: (updatedImage: { data: string; mime: string; name: string; size: number }, messageId: string) => Promise<void>;
+}) {
+  const baseCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const drawingCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   const historyRef = useRef<EditorSnapshot[]>([]);
-  const [mode, setMode] = useState<"draw" | "erase" | "text">("draw");
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
+  const panRef = useRef<{ left: number; top: number; x: number; y: number } | null>(null);
+  const [mode, setMode] = useState<"pan" | "draw" | "erase" | "text">("pan");
   const [text, setText] = useState("Текст");
   const [color, setColor] = useState("#ef4444");
+  const [brushSize, setBrushSize] = useState(8);
+  const [textSize, setTextSize] = useState(32);
   const [zoom, setZoom] = useState(1);
   const [texts, setTexts] = useState<EditorText[]>([]);
+  const [selectedTextId, setSelectedTextId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [dragText, setDragText] = useState<{ id: string; offsetX: number; offsetY: number } | null>(null);
-  const [canvasSize, setCanvasSize] = useState({ height: 1, width: 1 });
+  const [canvasSize, setCanvasSize] = useState({ displayHeight: 1, displayWidth: 1, height: 1, width: 1 });
+  const baseViewScale = canvasSize.displayWidth / canvasSize.width;
+  const viewScale = baseViewScale * zoom;
+  const textSizeSliderValue = textSize <= 14 ? ((textSize - 7) / 7) * 50 : 50 + ((textSize - 14) / 106) * 50;
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    if (!canvas || !context) return;
+    const baseCanvas = baseCanvasRef.current;
+    const drawingCanvas = drawingCanvasRef.current;
+    const baseContext = baseCanvas?.getContext("2d");
+    const drawingContext = drawingCanvas?.getContext("2d");
+    if (!baseCanvas || !drawingCanvas || !baseContext || !drawingContext) return;
 
     const source = new Image();
     source.onload = () => {
       const maxWidth = 1100;
       const maxHeight = 720;
-      const scale = Math.min(maxWidth / source.width, maxHeight / source.height, 1);
-      canvas.width = Math.max(1, Math.round(source.width * scale));
-      canvas.height = Math.max(1, Math.round(source.height * scale));
-      setCanvasSize({ height: canvas.height, width: canvas.width });
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(source, 0, 0, canvas.width, canvas.height);
+      const displayScale = Math.min(maxWidth / source.width, maxHeight / source.height, 1);
+      const width = Math.max(1, source.width);
+      const height = Math.max(1, source.height);
+      const displayWidth = Math.max(1, Math.round(source.width * displayScale));
+      const displayHeight = Math.max(1, Math.round(source.height * displayScale));
+      baseCanvas.width = width;
+      baseCanvas.height = height;
+      drawingCanvas.width = width;
+      drawingCanvas.height = height;
+      setCanvasSize({ displayHeight, displayWidth, height, width });
+      baseContext.imageSmoothingEnabled = true;
+      baseContext.imageSmoothingQuality = "high";
+      baseContext.clearRect(0, 0, width, height);
+      drawingContext.clearRect(0, 0, width, height);
+      baseContext.drawImage(source, 0, 0, width, height);
       setTexts([]);
+      setSelectedTextId(null);
       historyRef.current = [];
     };
     source.src = image.data;
   }, [image.data]);
 
   function pushHistory() {
-    const canvas = canvasRef.current;
+    const canvas = drawingCanvasRef.current;
     if (!canvas) return;
 
     historyRef.current = [
       ...historyRef.current,
       {
-        imageData: canvas.toDataURL("image/png"),
+        drawingData: canvas.toDataURL("image/png"),
         texts,
       },
     ].slice(-30);
   }
 
-  function restoreCanvas(dataUrl: string) {
-    const canvas = canvasRef.current;
+  function restoreDrawing(dataUrl: string) {
+    const canvas = drawingCanvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
 
@@ -115,11 +149,12 @@ function ImageEditorModal({ image, onClose }: { image: ImageEditorState; onClose
 
     historyRef.current = historyRef.current.slice(0, -1);
     setTexts(last.texts);
-    restoreCanvas(last.imageData);
+    setSelectedTextId(null);
+    restoreDrawing(last.drawingData);
   }
 
   function getCanvasPoint(event: PointerEvent<HTMLElement>) {
-    const canvas = canvasRef.current;
+    const canvas = drawingCanvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
     const rect = canvas.getBoundingClientRect();
@@ -130,58 +165,116 @@ function ImageEditorModal({ image, onClose }: { image: ImageEditorState; onClose
   }
 
   function start(event: PointerEvent<HTMLCanvasElement>) {
-    const canvas = canvasRef.current;
+    const canvas = drawingCanvasRef.current;
     const context = canvas?.getContext("2d");
     if (!canvas || !context) return;
+
+    if (mode === "pan") {
+      startPan(event);
+      return;
+    }
 
     const point = getCanvasPoint(event);
     if (mode === "text") {
       pushHistory();
+      const id = crypto.randomUUID();
       setTexts((current) => [
         ...current,
         {
           color,
-          id: crypto.randomUUID(),
+          fontSize: textSize / baseViewScale,
+          id,
           text: text || "Текст",
           x: point.x,
           y: point.y,
         },
       ]);
+      setSelectedTextId(id);
       return;
     }
 
     pushHistory();
     canvas.setPointerCapture(event.pointerId);
+    const rect = canvas.getBoundingClientRect();
+    const pixelScale = canvas.width / rect.width;
     context.globalCompositeOperation = mode === "erase" ? "destination-out" : "source-over";
-    context.strokeStyle = mode === "erase" ? "rgba(0,0,0,1)" : color;
-    context.lineWidth = mode === "erase" ? 18 : 4;
+    context.strokeStyle = color;
+    context.lineWidth = (mode === "erase" ? brushSize * 3 : brushSize) * pixelScale;
     context.lineCap = "round";
+    context.lineJoin = "round";
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(point.x, point.y, context.lineWidth / 2, 0, Math.PI * 2);
+    context.fill();
     context.beginPath();
     context.moveTo(point.x, point.y);
+    lastPointRef.current = point;
     setIsDrawing(true);
   }
 
   function move(event: PointerEvent<HTMLCanvasElement>) {
+    if (mode === "pan" && panRef.current) {
+      movePan(event);
+      return;
+    }
     if (!isDrawing || (mode !== "draw" && mode !== "erase")) return;
-    const context = canvasRef.current?.getContext("2d");
+    const context = drawingCanvasRef.current?.getContext("2d");
     if (!context) return;
 
     const point = getCanvasPoint(event);
-    context.lineTo(point.x, point.y);
+    const previous = lastPointRef.current ?? point;
+    const middle = { x: (previous.x + point.x) / 2, y: (previous.y + point.y) / 2 };
+    context.quadraticCurveTo(previous.x, previous.y, middle.x, middle.y);
     context.stroke();
+    lastPointRef.current = point;
   }
 
   function stop() {
-    const context = canvasRef.current?.getContext("2d");
+    const context = drawingCanvasRef.current?.getContext("2d");
     if (context) context.globalCompositeOperation = "source-over";
+    lastPointRef.current = null;
+    panRef.current = null;
     setIsDrawing(false);
+  }
+
+  function startPan(event: PointerEvent<HTMLElement>) {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    event.currentTarget.setPointerCapture(event.pointerId);
+    panRef.current = {
+      left: scroller.scrollLeft,
+      top: scroller.scrollTop,
+      x: event.clientX,
+      y: event.clientY,
+    };
+  }
+
+  function movePan(event: PointerEvent<HTMLElement>) {
+    const scroller = scrollRef.current;
+    const startPoint = panRef.current;
+    if (!scroller || !startPoint) return;
+
+    scroller.scrollLeft = startPoint.left - (event.clientX - startPoint.x);
+    scroller.scrollTop = startPoint.top - (event.clientY - startPoint.y);
   }
 
   function startTextDrag(event: PointerEvent<HTMLDivElement>, item: EditorText) {
     event.stopPropagation();
     pushHistory();
     const point = getCanvasPoint(event);
+    setSelectedTextId(item.id);
+    setTextSize(Math.round(item.fontSize * baseViewScale));
     setDragText({ id: item.id, offsetX: point.x - item.x, offsetY: point.y - item.y });
+  }
+
+  function editTextItem(item: EditorText) {
+    setSelectedTextId(item.id);
+    setText(item.text);
+    setTextSize(Math.round(item.fontSize * baseViewScale));
+    setMode("text");
   }
 
   function moveText(event: PointerEvent<HTMLDivElement>) {
@@ -200,27 +293,78 @@ function ImageEditorModal({ image, onClose }: { image: ImageEditorState; onClose
     );
   }
 
-  function downloadEdited() {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+  function changeSelectedTextSize(nextSize: number) {
+    setTextSize(nextSize);
+    if (!selectedTextId) return;
+    setTexts((current) => current.map((item) => (item.id === selectedTextId ? { ...item, fontSize: nextSize / baseViewScale } : item)));
+  }
+
+  function changeTextSizeFromSlider(sliderValue: number) {
+    const nextSize = sliderValue <= 50 ? 7 + (sliderValue / 50) * 7 : 14 + ((sliderValue - 50) / 50) * 106;
+    changeSelectedTextSize(Math.round(nextSize));
+  }
+
+  function applySelectedTextValue(nextText: string) {
+    setText(nextText);
+    if (!selectedTextId || mode !== "text") return;
+    setTexts((current) => current.map((item) => (item.id === selectedTextId ? { ...item, text: nextText || "Текст" } : item)));
+  }
+
+  function buildEditedImage() {
+    const baseCanvas = baseCanvasRef.current;
+    const drawingCanvas = drawingCanvasRef.current;
+    if (!baseCanvas || !drawingCanvas) return null;
 
     const output = document.createElement("canvas");
-    output.width = canvas.width;
-    output.height = canvas.height;
+    output.width = baseCanvas.width;
+    output.height = baseCanvas.height;
     const context = output.getContext("2d");
-    if (!context) return;
+    if (!context) return null;
 
-    context.drawImage(canvas, 0, 0);
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = "high";
+    context.drawImage(baseCanvas, 0, 0);
+    context.drawImage(drawingCanvas, 0, 0);
     for (const item of texts) {
       context.fillStyle = item.color;
-      context.font = "28px Arial";
+      context.font = `800 ${item.fontSize}px Arial`;
       context.fillText(item.text, item.x, item.y);
     }
 
+    const data = output.toDataURL("image/png");
+    const base64 = data.split(",")[1] ?? "";
+    return {
+      data,
+      mime: "image/png",
+      name: `edited-${image.name.replace(/\.[^.]+$/, "") || "image"}.png`,
+      size: Math.ceil((base64.length * 3) / 4),
+    };
+  }
+
+  function downloadEdited() {
+    const editedImage = buildEditedImage();
+    if (!editedImage) return;
+
     const link = document.createElement("a");
-    link.href = output.toDataURL("image/png");
-    link.download = `edited-${image.name.replace(/\.[^.]+$/, "") || "image"}.png`;
+    link.href = editedImage.data;
+    link.download = editedImage.name;
     link.click();
+  }
+
+  async function saveEdited() {
+    const editedImage = buildEditedImage();
+    if (!editedImage) return;
+
+    setIsSaving(true);
+    setSaveError("");
+    try {
+      await onSave(editedImage, image.messageId);
+      onClose();
+    } catch {
+      setSaveError("Не удалось сохранить изображение.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -229,46 +373,70 @@ function ImageEditorModal({ image, onClose }: { image: ImageEditorState; onClose
         <div className="image-editor-toolbar">
           <strong>{image.name}</strong>
           <div>
+            <button className={mode === "pan" ? "active" : ""} onClick={() => setMode("pan")} type="button">Переместить</button>
             <button className={mode === "draw" ? "active" : ""} onClick={() => setMode("draw")} type="button">Рисовать</button>
             <button className={mode === "erase" ? "active" : ""} onClick={() => setMode("erase")} type="button">Ластик</button>
             <button className={mode === "text" ? "active" : ""} onClick={() => setMode("text")} type="button">Текст</button>
             <input aria-label="Цвет" type="color" value={color} onChange={(event) => setColor(event.target.value)} />
-            <input aria-label="Текст" value={text} onChange={(event) => setText(event.target.value)} />
+            <input aria-label="Текст" value={text} onChange={(event) => applySelectedTextValue(event.target.value)} onClick={(event) => event.currentTarget.select()} onFocus={(event) => event.currentTarget.select()} />
+            <label>
+              Карандаш
+              <input aria-label="Толщина карандаша" max="32" min="3" onChange={(event) => setBrushSize(Number(event.target.value))} type="range" value={brushSize} />
+            </label>
+            <label>
+              Размер текста
+              <input aria-label="Размер текста" max="100" min="0" onChange={(event) => changeTextSizeFromSlider(Number(event.target.value))} type="range" value={textSizeSliderValue} />
+            </label>
             <button onClick={() => setZoom((value) => Math.max(0.5, Number((value - 0.25).toFixed(2))))} type="button">-</button>
             <span>{Math.round(zoom * 100)}%</span>
             <button onClick={() => setZoom((value) => Math.min(3, Number((value + 0.25).toFixed(2))))} type="button">+</button>
             <button onClick={undo} type="button">Отменить</button>
             <button onClick={downloadEdited} type="button">Скачать</button>
+            <button disabled={isSaving} onClick={saveEdited} type="button">{isSaving ? "Сохраняю..." : "Сохранить"}</button>
             <button onClick={onClose} type="button">Закрыть</button>
           </div>
         </div>
-        <div className="image-editor-canvas-scroll">
+        {saveError ? <div className="lesson-room-chat-note">{saveError}</div> : null}
+        <div className="image-editor-canvas-scroll" ref={scrollRef}>
           <div
-            className="image-editor-canvas-wrap"
+            className={`image-editor-canvas-wrap ${mode === "pan" ? "pan-mode" : ""}`}
             onPointerCancel={() => setDragText(null)}
-            onPointerMove={moveText}
-            onPointerUp={() => setDragText(null)}
-            style={{ height: canvasSize.height * zoom, width: canvasSize.width * zoom }}
+            onPointerMove={(event) => {
+              movePan(event);
+              moveText(event);
+            }}
+            onPointerUp={() => {
+              panRef.current = null;
+              setDragText(null);
+            }}
+            style={{ height: canvasSize.displayHeight * zoom, width: canvasSize.displayWidth * zoom }}
           >
             <canvas
-              className="image-editor-canvas"
+              aria-hidden="true"
+              className="image-editor-canvas image-editor-base-canvas"
+              ref={baseCanvasRef}
+              style={{ height: canvasSize.displayHeight * zoom, width: canvasSize.displayWidth * zoom }}
+            />
+            <canvas
+              className="image-editor-canvas image-editor-drawing-canvas"
               onPointerCancel={stop}
               onPointerDown={start}
               onPointerMove={move}
               onPointerUp={stop}
-              ref={canvasRef}
-              style={{ height: canvasSize.height * zoom, width: canvasSize.width * zoom }}
+              ref={drawingCanvasRef}
+              style={{ height: canvasSize.displayHeight * zoom, width: canvasSize.displayWidth * zoom }}
             />
             {texts.map((item) => (
               <div
-                className="image-editor-text-layer"
+                className={`image-editor-text-layer ${item.id === selectedTextId ? "selected" : ""}`}
                 key={item.id}
+                onDoubleClick={() => editTextItem(item)}
                 onPointerDown={(event) => startTextDrag(event, item)}
                 style={{
                   color: item.color,
-                  fontSize: 28 * zoom,
-                  left: item.x * zoom,
-                  top: item.y * zoom - 28 * zoom,
+                  fontSize: item.fontSize * viewScale,
+                  left: item.x * viewScale,
+                  top: item.y * viewScale - item.fontSize * viewScale,
                 }}
               >
                 {item.text}
@@ -436,6 +604,30 @@ export function LessonRoomShell({
     setChatError("");
   }
 
+  async function saveEditedImage(updatedImage: { data: string; mime: string; name: string; size: number }, messageId: string) {
+    if (!lessonId) throw new Error("Missing lesson");
+
+    const response = await fetch(`/api/lessons/${lessonId}/chat`, {
+      body: JSON.stringify({
+        attachmentData: updatedImage.data,
+        attachmentMime: updatedImage.mime,
+        attachmentName: updatedImage.name,
+        attachmentSize: updatedImage.size,
+        messageId,
+      }),
+      headers: { "Content-Type": "application/json" },
+      method: "PATCH",
+    });
+
+    if (!response.ok) {
+      throw new Error("Image save failed");
+    }
+
+    const data = (await response.json()) as { messages: ChatMessage[] };
+    setMessages(data.messages);
+    setChatError("");
+  }
+
   return (
     <main className={`lesson-room-shell ${isChatOpen ? "chat-open" : "chat-closed"} ${chatOnly ? "chat-only" : ""}`}>
       <div className="lesson-room-toolbar">
@@ -491,7 +683,7 @@ export function LessonRoomShell({
                       <div className="lesson-room-image-attachment">
                         <button
                           className="lesson-room-attachment image"
-                          onClick={() => setEditorImage({ data: message.attachmentData ?? "", name: message.attachmentName ?? "image" })}
+                          onClick={() => setEditorImage({ data: message.attachmentData ?? "", messageId: message.id, name: message.attachmentName ?? "image" })}
                           type="button"
                         >
                           <img alt={message.attachmentName} src={message.attachmentData} />
@@ -533,7 +725,7 @@ export function LessonRoomShell({
           </div>
         </aside>
       </section>
-      {editorImage ? <ImageEditorModal image={editorImage} onClose={() => setEditorImage(null)} /> : null}
+      {editorImage ? <ImageEditorModal image={editorImage} onClose={() => setEditorImage(null)} onSave={saveEditedImage} /> : null}
     </main>
   );
 }

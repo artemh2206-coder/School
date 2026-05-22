@@ -17,6 +17,14 @@ const deleteMessagesSchema = z.object({
   messageIds: z.array(z.string().min(1)).min(1).max(50),
 });
 
+const updateAttachmentSchema = z.object({
+  attachmentData: z.string().min(1),
+  attachmentMime: z.string().min(1),
+  attachmentName: z.string().min(1).max(255),
+  attachmentSize: z.number().int().positive(),
+  messageId: z.string().min(1),
+});
+
 type RouteContext = {
   params: Promise<{
     lessonId: string;
@@ -121,6 +129,35 @@ export async function POST(request: Request, context: RouteContext) {
       senderId: payload.senderId,
       senderName: payload.senderName,
       senderRole: payload.senderRole,
+      threadId: result.thread.id,
+    },
+  });
+
+  return NextResponse.json({
+    lessonId: result.lesson.id,
+    messages: await getMessages(result.thread.id),
+    threadId: result.thread.id,
+  });
+}
+
+export async function PATCH(request: Request, context: RouteContext) {
+  const { lessonId } = await context.params;
+  const payload = updateAttachmentSchema.parse(await request.json());
+  const result = await getLessonThread(lessonId);
+
+  if (!result) {
+    return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+  }
+
+  await db.chatMessage.updateMany({
+    data: {
+      attachmentData: payload.attachmentData,
+      attachmentMime: payload.attachmentMime,
+      attachmentName: payload.attachmentName,
+      attachmentSize: payload.attachmentSize,
+    },
+    where: {
+      id: payload.messageId,
       threadId: result.thread.id,
     },
   });

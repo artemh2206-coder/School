@@ -555,6 +555,32 @@ p {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.dashboard-profile-layout {
+  grid-template-columns: 360px minmax(0, 1fr);
+  align-items: stretch;
+}
+
+.dashboard-profile-layout .profile-feed,
+.dashboard-profile-layout .social-content-grid,
+.dashboard-profile-layout .dashboard-home {
+  display: contents;
+}
+
+.dashboard-profile-layout .profile-card {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: stretch;
+  margin-top: 0;
+}
+
+.dashboard-profile-layout .dashboard-home > .social-panel:nth-child(-n + 2) {
+  grid-column: 2;
+}
+
+.dashboard-profile-layout .dashboard-home > .social-panel:nth-child(n + 3) {
+  grid-column: 1 / -1;
+}
+
 .profile-card,
 .social-panel {
   border: 1px solid #d7e2ed;
@@ -566,6 +592,7 @@ p {
 .profile-card {
   position: static;
   margin-top: 18px;
+  min-height: 520px;
   padding: 16px;
   text-align: center;
 }
@@ -948,6 +975,113 @@ p {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.dashboard-home {
+  gap: 16px;
+}
+
+.dashboard-home .social-panel {
+  width: 100%;
+}
+
+.dashboard-card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-mini-card {
+  display: grid;
+  align-content: start;
+  gap: 7px;
+  min-height: 136px;
+  border: 1px solid #d7e2ed;
+  border-radius: 14px;
+  background: #fbfdff;
+  padding: 12px;
+}
+
+.dashboard-mini-card strong,
+.dashboard-mini-card span,
+.dashboard-mini-card p,
+.dashboard-mini-card small {
+  display: block;
+}
+
+.dashboard-mini-card strong {
+  color: #1f2d3d;
+  font-size: 15px;
+  line-height: 1.18;
+}
+
+.dashboard-mini-card span,
+.dashboard-mini-card small {
+  color: #6d8094;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.dashboard-mini-card p {
+  margin: 0;
+  color: #526476;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.lesson-mini-card {
+  background: linear-gradient(180deg, #f7fbff, #fbfdff);
+}
+
+.lesson-mini-card strong {
+  color: #23527d;
+  font-size: 22px;
+}
+
+.homework-card {
+  min-height: 168px;
+}
+
+.homework-card .button {
+  align-self: end;
+  min-height: 36px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.participant-mini-card {
+  justify-items: start;
+  min-height: 150px;
+}
+
+.mini-avatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d7eafa, #7fb1dd);
+  color: #23527d;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.teacher-profile-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.teacher-mini-card {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 112px;
+}
+
+.teacher-mini-card .mini-avatar {
+  grid-row: span 3;
+}
+
+.empty-state.compact {
+  min-height: 124px;
+}
+
 .lesson-summary-card {
   display: grid;
   gap: 14px;
@@ -1006,6 +1140,17 @@ p {
   line-height: 1.45;
 }
 
+.lesson-summary-id {
+  display: inline-flex;
+  margin-left: 8px;
+  border-radius: 999px;
+  background: #e8f4ff;
+  color: #23527d;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
 .lesson-summary-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 0.55fr);
@@ -1062,6 +1207,7 @@ p {
 .lesson-room-shell {
   position: relative;
   overflow: hidden;
+  height: 100vh;
   min-height: 100vh;
   background: #0f1720;
   color: #fff;
@@ -1125,7 +1271,9 @@ p {
 
 .lesson-room-stage {
   display: grid;
+  height: 100vh;
   min-height: 100vh;
+  overflow: hidden;
   transition: grid-template-columns 220ms ease;
 }
 
@@ -1170,6 +1318,8 @@ p {
 
 .lesson-room-video {
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   padding: 76px 18px 18px;
 }
 
@@ -1196,6 +1346,8 @@ p {
 .lesson-room-chat {
   position: relative;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   border-left: 1px solid rgba(255, 255, 255, 0.12);
   background: #f7fbff;
   color: #1f2d3d;
@@ -1238,8 +1390,27 @@ p {
 .lesson-room-chat-panel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
   padding: 76px 16px 16px;
+}
+
+.lesson-room-shell.chat-only .lesson-room-chat-panel {
+  padding-top: 126px;
+}
+
+.lesson-room-shell.chat-only .lesson-room-chat-panel header {
+  position: fixed;
+  top: 0;
+  right: 10%;
+  left: 10%;
+  margin: 0;
+  border-radius: 0 0 18px 18px;
+}
+
+.lesson-room-shell.chat-only .lesson-room-chat-feed {
+  padding-top: 14px;
 }
 
 .lesson-room-chat-panel header {
@@ -1280,6 +1451,7 @@ p {
 .lesson-room-chat-feed {
   min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 14px 0;
 }
 
@@ -2493,6 +2665,32 @@ p {
 
   .profile-card {
     position: static;
+    min-height: auto;
+  }
+
+  .dashboard-profile-layout .profile-feed,
+  .dashboard-profile-layout .social-content-grid,
+  .dashboard-profile-layout .dashboard-home {
+    display: grid;
+  }
+
+  .dashboard-profile-layout .profile-card,
+  .dashboard-profile-layout .dashboard-home > .social-panel:nth-child(-n + 2),
+  .dashboard-profile-layout .dashboard-home > .social-panel:nth-child(n + 3) {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .dashboard-profile-layout .dashboard-home {
+    gap: 16px;
+  }
+
+  .dashboard-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .teacher-profile-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .admin-session-row {
@@ -2518,7 +2716,8 @@ p {
   }
 
   .social-tabs,
-  .social-shell .metric-grid {
+  .social-shell .metric-grid,
+  .dashboard-card-grid {
     grid-template-columns: 1fr;
   }
 

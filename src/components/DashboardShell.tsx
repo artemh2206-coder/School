@@ -20,6 +20,7 @@ type Profile = {
 export function DashboardShell({
   children,
   coverSlot,
+  dashboardHomeLayout = false,
   hideProfileCard = false,
   logoutHref,
   nav,
@@ -31,6 +32,7 @@ export function DashboardShell({
 }: {
   children: ReactNode;
   coverSlot?: ReactNode;
+  dashboardHomeLayout?: boolean;
   hideProfileCard?: boolean;
   logoutHref?: string;
   nav: NavItem[];
@@ -79,7 +81,7 @@ export function DashboardShell({
           ) : null}
         </header>
 
-        <section className={`profile-layout ${hideProfileCard ? "without-profile-card" : ""}`}>
+        <section className={`profile-layout ${hideProfileCard ? "without-profile-card" : ""} ${dashboardHomeLayout ? "dashboard-profile-layout" : ""}`}>
           {hideProfileCard ? null : (
             <aside className="profile-card">
               <div className="profile-photo">{profile.initials}</div>

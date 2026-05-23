@@ -25,10 +25,13 @@ type LessonFocusCardProps = {
 
 type LessonSummaryCardProps = {
   counterpart: Counterpart;
+  initialLesson?: SummaryLesson | null;
   lessonHref: string;
   studentIds?: string[];
   teacherIds?: string[];
 };
+
+type SummaryLesson = Pick<LessonWithTiming, "day" | "end" | "id" | "month" | "start" | "startsAtIso">;
 
 const monthNames = [
   "января",
@@ -75,6 +78,7 @@ function getTimeLeft(startsAtIso: string, now: number) {
 
 export function LessonSummaryCard({
   counterpart,
+  initialLesson = null,
   lessonHref,
   studentIds,
   teacherIds,
@@ -88,9 +92,10 @@ export function LessonSummaryCard({
     .filter((lesson) => !studentIds?.length || studentIds.includes(lesson.studentId))
     .sort((a, b) => new Date(a.startsAtIso).getTime() - new Date(b.startsAtIso).getTime())[0];
 
-  const lessonDate = nextLesson ? new Date(nextLesson.startsAtIso) : null;
-  const timeLeft = nextLesson ? getTimeLeft(nextLesson.startsAtIso, now) : null;
-  const lessonUrl = nextLesson ? `${lessonHref}?lessonId=${encodeURIComponent(nextLesson.id)}` : lessonHref;
+  const currentLesson = nextLesson ?? initialLesson;
+  const lessonDate = currentLesson ? new Date(currentLesson.startsAtIso) : null;
+  const timeLeft = currentLesson ? getTimeLeft(currentLesson.startsAtIso, now) : null;
+  const lessonUrl = currentLesson ? `${lessonHref}/${encodeURIComponent(currentLesson.id)}` : lessonHref;
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -112,11 +117,18 @@ export function LessonSummaryCard({
         <div>
           <span>Дата и время</span>
           <strong>
-            {nextLesson && lessonDate
-              ? `${weekLabels[nextLesson.day]}, ${lessonDate.getDate()} ${monthNames[nextLesson.month]}`
+            {currentLesson && lessonDate
+              ? `${weekLabels[currentLesson.day]}, ${lessonDate.getDate()} ${monthNames[currentLesson.month]}`
               : "Урок не назначен"}
           </strong>
-          <p>{nextLesson ? `${formatHour(nextLesson.start)}-${formatHour(nextLesson.end)}` : "Появится после записи в расписании."}</p>
+          {currentLesson ? (
+            <p>
+              {formatHour(currentLesson.start)}-{formatHour(currentLesson.end)}
+              <span className="lesson-summary-id">ID {currentLesson.id}</span>
+            </p>
+          ) : (
+            <p>Появится после записи в расписании.</p>
+          )}
         </div>
 
         <div className="lesson-summary-timer">
@@ -128,7 +140,7 @@ export function LessonSummaryCard({
         </div>
       </div>
 
-      <Link className={`lesson-summary-action ${nextLesson ? "" : "disabled"}`} href={lessonUrl} target="_blank">
+      <Link className={`lesson-summary-action ${currentLesson ? "" : "disabled"}`} href={lessonUrl} target="_blank">
         Подключиться к уроку
       </Link>
     </div>

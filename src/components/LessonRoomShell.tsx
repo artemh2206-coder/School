@@ -516,6 +516,34 @@ export function LessonRoomShell({
   }, [chatOnly, isObserver, lessonId, participantId, participantRole]);
 
   useEffect(() => {
+    if (!lessonId || isObserver || participantRole === "ADMIN" || chatOnly) return;
+
+    const url = `/api/lessons/${lessonId}/session`;
+    const payload = JSON.stringify({ action: "disconnect", participantId, role: participantRole });
+    const disconnect = () => {
+      const body = new Blob([payload], { type: "application/json" });
+      if (navigator.sendBeacon?.(url, body)) return;
+
+      fetch(url, {
+        body: payload,
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        method: "POST",
+      }).catch(() => undefined);
+    };
+
+    window.addEventListener("beforeunload", disconnect);
+    window.addEventListener("offline", disconnect);
+    window.addEventListener("pagehide", disconnect);
+
+    return () => {
+      window.removeEventListener("beforeunload", disconnect);
+      window.removeEventListener("offline", disconnect);
+      window.removeEventListener("pagehide", disconnect);
+    };
+  }, [chatOnly, isObserver, lessonId, participantId, participantRole]);
+
+  useEffect(() => {
     if (!lessonId) return;
     let active = true;
     async function syncMessages() {

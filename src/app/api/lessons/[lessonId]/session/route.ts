@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/server/db";
 
 const participantSchema = z.object({
+  action: z.enum(["disconnect", "heartbeat"]).optional(),
   participantId: z.string().min(1),
   role: z.enum(["STUDENT", "TEACHER"]),
 });
@@ -128,10 +129,104 @@ async function getPresenceState(lessonId: string, now = new Date()) {
   };
 }
 
+async function finishLessonIfInactive(lessonId: string, now = new Date()) {
+  const lesson = await db.lesson.findUnique({
+    select: {
+      actualEndedAt: true,
+      actualStartedAt: true,
+      id: true,
+    },
+    where: {
+      id: lessonId,
+    },
+  });
+
+  if (!lesson?.actualStartedAt || lesson.actualEndedAt) return null;
+
+  const presence = await getPresenceState(lesson.id, now);
+  if (presence.isActive) return null;
+
+  return db.lesson.update({
+    data: {
+      actualEndedAt: now,
+      status: "COMPLETED",
+      transcriptRetainUntil: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
+    },
+    select: {
+      actualEndedAt: true,
+      actualStartedAt: true,
+      id: true,
+      status: true,
+    },
+    where: {
+      id: lesson.id,
+    },
+  });
+}
+
+async function disconnectParticipant(lessonId: string, payload: z.infer<typeof participantSchema>, now = new Date()) {
+  const lesson = await db.lesson.findUnique({
+    select: {
+      actualEndedAt: true,
+      actualStartedAt: true,
+      id: true,
+    },
+    where: {
+      id: lessonId,
+    },
+  });
+
+  if (!lesson) return null;
+
+  const presenceUpdate = await db.lessonPresence.updateMany({
+    data: {
+      disconnectedAt: now,
+      lastSeenAt: now,
+    },
+    where: {
+      disconnectedAt: null,
+      lessonId: lesson.id,
+      participantId: payload.participantId,
+      role: payload.role,
+    },
+  });
+
+  if (presenceUpdate.count > 0) {
+    const name = await getParticipantName(payload.role, payload.participantId);
+    await addSystemMessage(lesson.id, `${name} завершил урок.`);
+  }
+
+  return db.lesson.update({
+    data: {
+      actualEndedAt: lesson.actualStartedAt && !lesson.actualEndedAt ? now : lesson.actualEndedAt,
+      status: lesson.actualStartedAt ? "COMPLETED" : undefined,
+      transcriptRetainUntil: lesson.actualStartedAt && !lesson.actualEndedAt ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) : undefined,
+    },
+    select: {
+      actualEndedAt: true,
+      actualStartedAt: true,
+      id: true,
+      status: true,
+    },
+    where: {
+      id: lesson.id,
+    },
+  });
+}
+
 export async function POST(request: Request, context: RouteContext) {
   const { lessonId } = await context.params;
   const payload = participantSchema.parse(await request.json());
   const now = new Date();
+
+  if (payload.action === "disconnect") {
+    const updated = await disconnectParticipant(lessonId, payload, now);
+    if (!updated) {
+      return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
+    }
+    return NextResponse.json({ isActive: false, lesson: updated });
+  }
+
   const lesson = await db.lesson.findUnique({
     select: {
       actualEndedAt: true,
@@ -191,6 +286,11 @@ export async function POST(request: Request, context: RouteContext) {
   const presence = await getPresenceState(lesson.id, now);
   const shouldStart = presence.isActive && !lesson.actualStartedAt;
   const shouldReopen = presence.isActive && lesson.actualEndedAt;
+  const inactiveLesson = await finishLessonIfInactive(lesson.id, now);
+
+  if (inactiveLesson) {
+    return NextResponse.json({ isActive: false, lesson: inactiveLesson });
+  }
 
   const updated = await db.lesson.update({
     data: {
@@ -215,53 +315,11 @@ export async function PATCH(request: Request, context: RouteContext) {
   const { lessonId } = await context.params;
   const payload = participantSchema.parse(await request.json());
   const now = new Date();
-  const lesson = await db.lesson.findUnique({
-    select: {
-      actualEndedAt: true,
-      actualStartedAt: true,
-      id: true,
-    },
-    where: {
-      id: lessonId,
-    },
-  });
+  const updated = await disconnectParticipant(lessonId, payload, now);
 
-  if (!lesson) {
+  if (!updated) {
     return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
   }
-
-  await db.lessonPresence.updateMany({
-    data: {
-      disconnectedAt: now,
-      lastSeenAt: now,
-    },
-    where: {
-      disconnectedAt: null,
-      lessonId: lesson.id,
-      participantId: payload.participantId,
-      role: payload.role,
-    },
-  });
-
-  const name = await getParticipantName(payload.role, payload.participantId);
-  await addSystemMessage(lesson.id, `${name} завершил урок.`);
-
-  const updated = await db.lesson.update({
-    data: {
-      actualEndedAt: lesson.actualStartedAt && !lesson.actualEndedAt ? now : lesson.actualEndedAt,
-      status: lesson.actualStartedAt ? "COMPLETED" : undefined,
-      transcriptRetainUntil: lesson.actualStartedAt && !lesson.actualEndedAt ? new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000) : undefined,
-    },
-    select: {
-      actualEndedAt: true,
-      actualStartedAt: true,
-      id: true,
-      status: true,
-    },
-    where: {
-      id: lesson.id,
-    },
-  });
 
   return NextResponse.json({ isActive: false, lesson: updated });
 }

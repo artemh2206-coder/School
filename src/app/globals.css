@@ -1307,24 +1307,31 @@ html[lang="uk"] .language-switcher span:first-child {
   min-height: 38px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
   padding: 0 12px;
   text-decoration: none;
   font-size: 13px;
   font-weight: 800;
   backdrop-filter: blur(12px);
+  opacity: 0.48;
+  transition: background 160ms ease, opacity 160ms ease, transform 160ms ease;
   pointer-events: auto;
 }
 
 .lesson-room-toolbar button:hover,
 .lesson-room-toolbar a:hover {
   background: rgba(255, 255, 255, 0.16);
+  opacity: 1;
 }
 
 .lesson-room-danger {
   border-color: rgba(255, 104, 104, 0.34) !important;
-  background: rgba(214, 61, 61, 0.82) !important;
+  background: rgba(214, 61, 61, 0.58) !important;
+}
+
+.lesson-room-danger:hover {
+  background: rgba(214, 61, 61, 0.92) !important;
 }
 
 .lesson-room-stage {
@@ -1378,7 +1385,7 @@ html[lang="uk"] .language-switcher span:first-child {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  padding: 76px 18px 18px;
+  padding: 0;
 }
 
 .lesson-room-video-placeholder {
@@ -1405,11 +1412,11 @@ html[lang="uk"] .language-switcher span:first-child {
 .livekit-room-empty {
   display: flex;
   position: relative;
-  min-height: calc(100vh - 94px);
-  height: calc(100vh - 94px);
+  min-height: 100%;
+  height: 100%;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
+  border: 0;
+  border-radius: 0;
   background:
     linear-gradient(135deg, rgba(28, 42, 57, 0.92), rgba(12, 20, 29, 0.98)),
     #111c27;
@@ -1418,8 +1425,8 @@ html[lang="uk"] .language-switcher span:first-child {
 
 .livekit-lesson-room {
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  gap: 0;
+  padding: 0;
 }
 
 .livekit-room-empty {
@@ -1575,7 +1582,7 @@ html[lang="uk"] .language-switcher span:first-child {
 }
 
 .livekit-room-head {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
@@ -1621,17 +1628,20 @@ html[lang="uk"] .language-switcher span:first-child {
   min-height: 0;
   flex: 1 1 auto;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  grid-auto-rows: minmax(180px, 1fr);
+  grid-auto-rows: minmax(0, 1fr);
   gap: 10px;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .livekit-video-grid.tiles-1 {
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .livekit-video-grid [data-lk-participant-tile] {
-  min-height: 180px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 16px;
@@ -1641,7 +1651,8 @@ html[lang="uk"] .language-switcher span:first-child {
 .livekit-video-grid video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #05080d;
 }
 
 .livekit-video-grid [data-lk-source="screen_share"] video {
@@ -1651,32 +1662,56 @@ html[lang="uk"] .language-switcher span:first-child {
 
 .livekit-control-bar {
   display: flex;
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 6;
+  width: 188px;
+  height: 58px;
+  align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
-  flex-wrap: wrap;
+  flex-direction: row !important;
+  flex-wrap: nowrap;
   gap: 8px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(7, 13, 21, 0.42);
+  padding: 8px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(16px);
+  opacity: 0.42;
+  transition: background 160ms ease, opacity 160ms ease;
 }
 
 .livekit-control-bar button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-height: 38px;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
   color: #fff;
-  padding: 0 12px;
+  padding: 0;
   font-size: 13px;
   font-weight: 850;
+}
+
+.livekit-control-bar:hover,
+.livekit-control-bar:focus-within {
+  background: rgba(7, 13, 21, 0.78);
+  opacity: 1;
 }
 
 .livekit-control-bar button:hover {
   background: rgba(255, 255, 255, 0.16);
 }
 
-.livekit-control-bar button[data-lk-enabled="true"] {
+.livekit-control-bar button.active {
   border-color: rgba(92, 194, 142, 0.4);
   background: rgba(92, 194, 142, 0.18);
 }
@@ -1694,6 +1729,64 @@ html[lang="uk"] .language-switcher span:first-child {
   text-align: center;
   font-size: 13px;
   font-weight: 800;
+}
+
+:fullscreen .lesson-room-shell,
+:fullscreen .lesson-room-stage,
+:fullscreen .lesson-room-video,
+:fullscreen .livekit-lesson-room {
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+  border: 0;
+  border-radius: 0;
+  background: #000;
+}
+
+:fullscreen .lesson-room-stage,
+:fullscreen .lesson-room-shell.chat-open .lesson-room-stage,
+:fullscreen .lesson-room-shell.chat-closed .lesson-room-stage {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+:fullscreen .lesson-room-video {
+  padding: 0;
+}
+
+:fullscreen .lesson-room-chat,
+:fullscreen .lesson-room-chat-toggle,
+:fullscreen .livekit-room-head,
+:fullscreen .livekit-quality-note,
+:fullscreen .livekit-room-status {
+  display: none !important;
+}
+
+:fullscreen .lesson-room-toolbar {
+  top: 16px;
+  right: 16px;
+  left: auto;
+  width: auto;
+  opacity: 0.38;
+  transition: opacity 160ms ease;
+}
+
+:fullscreen .lesson-room-toolbar:hover,
+:fullscreen .lesson-room-toolbar:focus-within {
+  opacity: 1;
+}
+
+:fullscreen .lesson-room-toolbar button {
+  background: rgba(7, 13, 21, 0.34);
+}
+
+:fullscreen .livekit-control-bar {
+  bottom: 18px;
+  opacity: 0.32;
+}
+
+:fullscreen .livekit-control-bar:hover,
+:fullscreen .livekit-control-bar:focus-within {
+  opacity: 1;
 }
 
 .lesson-room-chat {
@@ -1727,13 +1820,20 @@ html[lang="uk"] .language-switcher span:first-child {
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-right: 0;
   border-radius: 14px 0 0 14px;
-  background: rgba(247, 251, 255, 0.96);
+  background: rgba(247, 251, 255, 0.48);
   color: #24496d;
   padding: 0 12px;
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.22);
   pointer-events: auto;
   font-size: 12px;
   font-weight: 850;
+  opacity: 0.5;
+  transition: background 160ms ease, opacity 160ms ease;
+}
+
+.lesson-room-chat-toggle:hover {
+  background: rgba(247, 251, 255, 0.96);
+  opacity: 1;
 }
 
 .lesson-room-shell.chat-open .lesson-room-chat-toggle {
@@ -4378,7 +4478,7 @@ html[lang="uk"] .social-cover .language-switcher span:first-child {
 
   .lesson-room-video {
     min-height: 100vh;
-    padding: 118px 10px 10px;
+    padding: 0;
   }
 
   .lesson-room-video-placeholder {
@@ -4388,13 +4488,13 @@ html[lang="uk"] .social-cover .language-switcher span:first-child {
 
   .livekit-lesson-room,
   .livekit-room-empty {
-    min-height: calc(100vh - 128px);
-    height: calc(100vh - 128px);
-    border-radius: 16px;
+    min-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
   }
 
   .livekit-lesson-room {
-    padding: 10px;
+    padding: 0;
   }
 
   .livekit-room-head {
@@ -4408,12 +4508,21 @@ html[lang="uk"] .social-cover .language-switcher span:first-child {
 
   .livekit-video-grid {
     grid-template-columns: 1fr;
-    grid-auto-rows: minmax(180px, 1fr);
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
+  .livekit-control-bar {
+    bottom: 10px;
+    width: 176px;
+    height: 54px;
   }
 
   .livekit-control-bar button {
-    min-height: 36px;
-    padding: 0 10px;
+    width: 38px;
+    min-width: 38px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
     font-size: 12px;
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { ControlBar, LiveKitRoom, ParticipantTile, RoomAudioRenderer, TrackLoop, useTracks } from "@livekit/components-react";
+import { LiveKitRoom, ParticipantTile, RoomAudioRenderer, TrackLoop, useLocalParticipant, useTracks } from "@livekit/components-react";
 import { Mic, MicOff, MonitorUp, Play, ScreenShare, Video, VideoOff } from "lucide-react";
 import { Track, VideoPresets, ScreenSharePresets } from "livekit-client";
 import { useMemo, useState } from "react";
@@ -22,12 +22,12 @@ type TokenResponse = {
 function LessonVideoGrid() {
   const tracks = useTracks([
     { source: Track.Source.ScreenShare, withPlaceholder: false },
-    { source: Track.Source.Camera, withPlaceholder: true },
+    { source: Track.Source.Camera, withPlaceholder: false },
   ]);
 
   const sortedTracks = useMemo(
     () =>
-      [...tracks].sort((left, right) => {
+      tracks.filter((track) => track.publication && !track.publication.isMuted).sort((left, right) => {
         const leftIsScreen = left.source === Track.Source.ScreenShare ? 0 : 1;
         const rightIsScreen = right.source === Track.Source.ScreenShare ? 0 : 1;
         return leftIsScreen - rightIsScreen;
@@ -40,6 +40,67 @@ function LessonVideoGrid() {
       <TrackLoop tracks={sortedTracks}>
         <ParticipantTile />
       </TrackLoop>
+    </div>
+  );
+}
+
+function LessonCallDock({ canPublish }: { canPublish: boolean }) {
+  const { isCameraEnabled, isMicrophoneEnabled, isScreenShareEnabled, localParticipant } = useLocalParticipant();
+
+  if (!canPublish) return null;
+
+  return (
+    <div className="livekit-control-bar" aria-label="Управление видеозвонком" data-no-translate>
+      <button
+        aria-label={isMicrophoneEnabled ? "Выключить микрофон" : "Включить микрофон"}
+        className={isMicrophoneEnabled ? "active" : ""}
+        onClick={() => void localParticipant.setMicrophoneEnabled(!isMicrophoneEnabled)}
+        type="button"
+      >
+        {isMicrophoneEnabled ? <Mic aria-hidden="true" size={20} /> : <MicOff aria-hidden="true" size={20} />}
+      </button>
+      <button
+        aria-label={isCameraEnabled ? "Выключить камеру" : "Включить камеру"}
+        className={isCameraEnabled ? "active" : ""}
+        onClick={() =>
+          void localParticipant.setCameraEnabled(
+            !isCameraEnabled,
+            !isCameraEnabled
+              ? {
+                  frameRate: 30,
+                  resolution: VideoPresets.h720.resolution,
+                }
+              : undefined,
+          )
+        }
+        type="button"
+      >
+        {isCameraEnabled ? <Video aria-hidden="true" size={20} /> : <VideoOff aria-hidden="true" size={20} />}
+      </button>
+      <button
+        aria-label={isScreenShareEnabled ? "Отключить демонстрацию экрана" : "Включить демонстрацию экрана"}
+        className={isScreenShareEnabled ? "active" : ""}
+        onClick={() =>
+          void localParticipant.setScreenShareEnabled(
+            !isScreenShareEnabled,
+            !isScreenShareEnabled
+              ? {
+                  contentHint: "detail",
+                  resolution: ScreenSharePresets.h1080fps15.resolution,
+                }
+              : undefined,
+            !isScreenShareEnabled
+              ? {
+                  screenShareEncoding: ScreenSharePresets.h1080fps15.encoding,
+                  screenShareSimulcastLayers: [ScreenSharePresets.h720fps15, ScreenSharePresets.h1080fps15],
+                }
+              : undefined,
+          )
+        }
+        type="button"
+      >
+        <MonitorUp aria-hidden="true" size={20} />
+      </button>
     </div>
   );
 }
@@ -163,8 +224,8 @@ export function LiveKitLessonRoom({
         adaptiveStream: true,
         dynacast: true,
         publishDefaults: {
-          screenShareEncoding: ScreenSharePresets.h720fps15.encoding,
-          screenShareSimulcastLayers: [ScreenSharePresets.h360fps15, ScreenSharePresets.h720fps15],
+          screenShareEncoding: ScreenSharePresets.h1080fps15.encoding,
+          screenShareSimulcastLayers: [ScreenSharePresets.h720fps15, ScreenSharePresets.h1080fps15],
           simulcast: true,
           videoEncoding: VideoPresets.h720.encoding,
           videoSimulcastLayers: [VideoPresets.h360, VideoPresets.h720],
@@ -198,19 +259,7 @@ export function LiveKitLessonRoom({
       </div>
       <LessonVideoGrid />
       {status ? <div className="livekit-room-status">{status}</div> : null}
-      <ControlBar
-        className="livekit-control-bar"
-        controls={{
-          camera: canPublish,
-          chat: false,
-          leave: false,
-          microphone: canPublish,
-          screenShare: canPublish,
-          settings: false,
-        }}
-        saveUserChoices
-        variation="verbose"
-      />
+      <LessonCallDock canPublish={canPublish} />
       <RoomAudioRenderer />
     </LiveKitRoom>
   );

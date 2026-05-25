@@ -47,17 +47,37 @@ export function DashboardShell({
 
   return (
     <main className="social-shell">
+      <header className={`social-cover ${compactHeader ? "compact" : ""}`}>
+        <div className="social-cover-identity">
+          <Link className="social-logo" href="/">
+            <span>NeoSchool</span>
+          </Link>
+          <div>
+            <p>{roleLabel}</p>
+            <h1>
+              {profile.name} {profile.id ? <span className="profile-id">{profile.id}</span> : null}
+            </h1>
+          </div>
+        </div>
+        <div className="dashboard-header-actions">
+          {coverSlot ? <div className="cover-slot">{coverSlot}</div> : null}
+          <LanguageSwitcher />
+          {logoutHref ? (
+            <Link className="button header-logout" href={logoutHref}>
+              Выйти
+            </Link>
+          ) : null}
+        </div>
+      </header>
+
       <aside className="social-sidebar">
-        <Link className="social-logo" href="/">
-          <span>NeoSchool</span>
-        </Link>
         <nav className="social-tabs" aria-label={roleLabel}>
           {nav.map((item) => (
             <a
               href={item.href}
               key={item.href}
-              rel={item.newTab || item.href.includes("/lesson") ? "noreferrer" : undefined}
-              target={item.newTab || item.href.includes("/lesson") ? "_blank" : undefined}
+              rel={item.newTab ? "noreferrer" : undefined}
+              target={item.newTab ? "_blank" : undefined}
             >
               <strong>{item.label}</strong>
               <span>{item.description}</span>
@@ -67,24 +87,6 @@ export function DashboardShell({
       </aside>
 
       <section className="social-main">
-        <header className={`social-cover ${compactHeader ? "compact" : ""}`}>
-          <div>
-            <p>{roleLabel}</p>
-            <h1>
-              {profile.name} {profile.id ? <span className="profile-id">{profile.id}</span> : null}
-            </h1>
-          </div>
-          <div className="dashboard-header-actions">
-            {coverSlot ? <div className="cover-slot">{coverSlot}</div> : null}
-            <LanguageSwitcher />
-            {logoutHref ? (
-              <Link className="button header-logout" href={logoutHref}>
-                Выйти
-              </Link>
-            ) : null}
-          </div>
-        </header>
-
         <section className={`profile-layout ${hideProfileCard ? "without-profile-card" : ""} ${dashboardHomeLayout ? "dashboard-profile-layout" : ""}`}>
           {hideProfileCard ? null : (
             <aside className="profile-card">

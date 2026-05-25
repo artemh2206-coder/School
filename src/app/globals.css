@@ -3220,6 +3220,149 @@ html[lang="uk"] .language-switcher span:first-child {
   background: #f8fafc;
 }
 
+.social-shell {
+  grid-template-rows: auto 1fr;
+  column-gap: 0;
+}
+
+.social-cover {
+  grid-column: 1 / -1;
+  display: flex;
+  min-height: 96px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(135deg, rgba(17, 24, 39, 0.98), rgba(31, 65, 114, 0.96) 48%, rgba(37, 99, 235, 0.9)),
+    #111827;
+  color: #ffffff;
+  padding: 18px 24px;
+  box-shadow: 0 18px 46px rgba(15, 23, 42, 0.22);
+}
+
+.social-cover::before {
+  display: none;
+}
+
+.social-cover-identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 18px;
+}
+
+.social-cover .social-logo {
+  display: inline-flex;
+  min-height: 54px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07)),
+    rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  padding: 0 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 14px 32px rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(18px);
+}
+
+.social-cover .social-logo span {
+  gap: 10px;
+}
+
+.social-cover .social-logo span::before {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #111827;
+}
+
+.social-cover p {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.social-cover h1 {
+  color: #ffffff;
+}
+
+.social-cover .profile-id {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.11);
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.social-sidebar {
+  grid-column: 1;
+  grid-row: 2;
+  min-height: auto;
+  border-top: 1px solid #dce5f0;
+}
+
+.social-main {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.social-tabs {
+  margin-top: 0;
+}
+
+.social-cover .teacher-cover-balance,
+.social-cover .language-switcher,
+.social-cover .header-logout {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 14px 30px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(16px);
+}
+
+.social-cover .teacher-cover-balance span {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.social-cover .teacher-cover-balance strong {
+  color: #ffffff;
+}
+
+.social-cover .language-switcher {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.social-cover .language-switcher::before {
+  background: #ffffff;
+}
+
+.social-cover .language-switcher span:first-child,
+html[lang="uk"] .social-cover .language-switcher span:last-child {
+  color: #111827;
+}
+
+html[lang="uk"] .social-cover .language-switcher span:first-child {
+  color: rgba(226, 232, 240, 0.78);
+}
+
+.social-cover .header-logout:hover,
+.social-cover .language-switcher:hover,
+.social-cover .teacher-cover-balance:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.social-cover.compact {
+  min-height: 82px;
+  border-radius: 0;
+  padding: 14px 22px;
+}
+
 .profile-layout {
   gap: 14px;
 }
@@ -3852,6 +3995,194 @@ html[lang="uk"] .language-switcher span:first-child {
   font-size: 13px;
 }
 
+.lesson-session-list {
+  display: grid;
+  gap: 10px;
+}
+
+.lesson-session-filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.2fr) minmax(150px, 0.8fr) minmax(170px, 0.9fr) minmax(150px, 0.75fr) auto;
+  gap: 10px;
+  align-items: end;
+  border: 1px solid #dde6f1;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, #ffffff, #f8fafc),
+    #ffffff;
+  margin-bottom: 14px;
+  padding: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
+}
+
+.lesson-session-filters label {
+  display: grid;
+  gap: 6px;
+}
+
+.lesson-session-filters label > span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.lesson-session-filters select {
+  min-height: 38px;
+  width: 100%;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #111827;
+  padding: 0 34px 0 11px;
+  font-size: 12px;
+  font-weight: 760;
+}
+
+.lesson-session-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.lesson-session-filter-actions .button {
+  min-height: 38px;
+  border-radius: 10px;
+  padding: 0 12px;
+  white-space: nowrap;
+}
+
+.lesson-session-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(270px, auto);
+  gap: 16px;
+  align-items: center;
+  border: 1px solid #dde6f1;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.045);
+}
+
+.lesson-session-row.is-next {
+  border-color: rgba(34, 197, 94, 0.28);
+  background:
+    linear-gradient(180deg, rgba(240, 253, 244, 0.72), #ffffff 62%),
+    #ffffff;
+}
+
+.lesson-session-main {
+  min-width: 0;
+}
+
+.lesson-session-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lesson-session-title strong {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.lesson-session-title span,
+.lesson-session-meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.lesson-session-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.lesson-session-meta .lesson-homework-badge {
+  gap: 6px;
+  min-height: 28px;
+  border-width: 1px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.lesson-homework-badge.missing {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.lesson-homework-badge.attached {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.lesson-homework-badge.submitted {
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.lesson-session-side {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.lesson-session-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.lesson-session-status.planned {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.lesson-session-status.next {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.lesson-session-status.done {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.lesson-session-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lesson-session-actions .button {
+  min-height: 36px;
+  border-radius: 9px;
+  padding: 0 12px;
+}
+
 .lesson-list-item div {
   display: flex;
   flex-wrap: wrap;
@@ -3866,6 +4197,16 @@ html[lang="uk"] .language-switcher span:first-child {
     grid-template-columns: 1fr;
   }
 
+  .social-cover,
+  .social-sidebar,
+  .social-main {
+    grid-column: 1;
+  }
+
+  .social-cover {
+    flex-wrap: wrap;
+  }
+
   .lesson-focus-main,
   .lesson-focus-grid,
   .lesson-focus-hero,
@@ -3878,7 +4219,12 @@ html[lang="uk"] .language-switcher span:first-child {
   }
 
   .social-sidebar {
+    grid-row: 2;
     min-height: auto;
+  }
+
+  .social-main {
+    grid-row: 3;
   }
 
   .social-tabs {
@@ -3926,11 +4272,49 @@ html[lang="uk"] .language-switcher span:first-child {
   .admin-participant-row {
     grid-template-columns: 1fr 1fr;
   }
+
+  .lesson-session-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lesson-session-filter-actions {
+    justify-content: flex-start;
+  }
+
+  .lesson-session-row {
+    grid-template-columns: 1fr;
+  }
+
+  .lesson-session-side {
+    justify-items: start;
+  }
+
+  .lesson-session-actions {
+    justify-content: flex-start;
+  }
 }
 
 @media (max-width: 720px) {
   .social-main {
     padding: 14px;
+  }
+
+  .social-cover {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .social-cover-identity {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .dashboard-header-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .lesson-focus-heading h3 {
@@ -3939,15 +4323,9 @@ html[lang="uk"] .language-switcher span:first-child {
 
   .social-tabs,
   .social-shell .metric-grid,
-  .dashboard-card-grid {
+  .dashboard-card-grid,
+  .lesson-session-filters {
     grid-template-columns: 1fr;
-  }
-
-  .social-cover {
-    align-items: flex-start;
-    flex-direction: column;
-    border-radius: 18px 18px 0 0;
-    padding: 22px;
   }
 
   .month-grid {

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LanguageSwitcher } from "./LanguageRuntime";
 
 export function MarketingNav() {
   return (
@@ -17,6 +18,7 @@ export function MarketingNav() {
         <Link className="admin-link" href="/admin/login">
           Админ
         </Link>
+        <LanguageSwitcher />
       </nav>
     </header>
   );

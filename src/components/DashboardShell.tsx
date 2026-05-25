@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LanguageSwitcher } from "./LanguageRuntime";
 import { ScheduleCalendar } from "./ScheduleCalendar";
 
 type NavItem = {
@@ -73,12 +74,15 @@ export function DashboardShell({
               {profile.name} {profile.id ? <span className="profile-id">{profile.id}</span> : null}
             </h1>
           </div>
-          {coverSlot ? <div className="cover-slot">{coverSlot}</div> : null}
-          {logoutHref ? (
-            <Link className="button header-logout" href={logoutHref}>
-              Выйти
-            </Link>
-          ) : null}
+          <div className="dashboard-header-actions">
+            {coverSlot ? <div className="cover-slot">{coverSlot}</div> : null}
+            <LanguageSwitcher />
+            {logoutHref ? (
+              <Link className="button header-logout" href={logoutHref}>
+                Выйти
+              </Link>
+            ) : null}
+          </div>
         </header>
 
         <section className={`profile-layout ${hideProfileCard ? "without-profile-card" : ""} ${dashboardHomeLayout ? "dashboard-profile-layout" : ""}`}>

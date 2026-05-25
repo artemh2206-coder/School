@@ -13,9 +13,12 @@
     "seed": "node prisma/seed.mjs"
   },
   "dependencies": {
+    "@livekit/components-react": "^2.9.21",
     "@prisma/client": "^6.19.3",
     "bcryptjs": "^3.0.3",
     "jose": "^6.2.3",
+    "livekit-client": "^2.19.0",
+    "livekit-server-sdk": "^2.15.3",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "prisma": "^6.19.3",

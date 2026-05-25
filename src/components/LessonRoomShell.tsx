@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Maximize2, MessageSquare, Minimize2, Papercl
 import { useSearchParams } from "next/navigation";
 import type { FormEvent, PointerEvent, ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { LiveKitLessonRoom } from "@/components/LiveKitLessonRoom";
 import { useLessons } from "@/components/ScheduleCalendar";
 
 type LessonRoomShellProps = {
@@ -660,9 +661,13 @@ export function LessonRoomShell({
       <section className="lesson-room-stage" aria-label="Рабочая область урока">
         {chatOnly ? null : (
           <div className="lesson-room-video">
-            <div className="lesson-room-video-placeholder">
-              <span>Zoom трансляция</span>
-            </div>
+            <LiveKitLessonRoom
+              isObserver={isObserver}
+              lessonId={lessonId}
+              participantId={participantId}
+              participantName={participantName}
+              participantRole={participantRole}
+            />
           </div>
         )}
 

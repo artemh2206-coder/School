@@ -42,7 +42,11 @@ export default async function StudentLessonListPage({
 
   return (
     <DashboardShell
-      nav={[{ href: `/student/${student.id}/dashboard`, label: "Кабинет", description: "главная" }]}
+      nav={[
+        { href: `/student/${student.id}/dashboard`, label: "Кабинет", description: "главная" },
+        { href: `/student/${student.id}/teacher`, label: "Мой учитель", description: "профиль учителя" },
+        { href: `/student/${student.id}/teachers`, label: "Сменить учителя", description: "каталог учителей" },
+      ]}
       profile={{
         id: student.id,
         initials: getInitials(student.fullName),

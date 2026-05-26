@@ -118,6 +118,8 @@ export default async function TeacherLessonListPage({
       nav={[
         { href: `/teacher/${teacher.id}/dashboard`, label: "Кабинет", description: "главная" },
         { href: "#schedule-modal", label: "Расписание", description: "календарь" },
+        { href: `/teacher/${teacher.id}/students`, label: "Ученики", description: "список учеников" },
+        { href: `/teacher/${teacher.id}/profile`, label: "Профиль", description: "витрина для учеников" },
       ]}
       profile={{
         id: teacher.id,

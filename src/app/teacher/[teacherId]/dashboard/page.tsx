@@ -113,9 +113,12 @@ export default async function TeacherDashboardPage({
   const firstStudent = nextLesson?.student ?? students[0] ?? null;
 
   const lessonHref = `/teacher/${teacher.id}/lesson`;
+  const studentsHref = `/teacher/${teacher.id}/students`;
   const nav = [
     { href: "#schedule-modal", label: "Расписание", description: "открыть календарь" },
-    { href: lessonHref, label: "Урок", description: "открыть страницу урока" },
+    { href: lessonHref, label: "Уроки", description: "открыть список уроков" },
+    { href: studentsHref, label: "Ученики", description: "список учеников" },
+    { href: `/teacher/${teacher.id}/profile`, label: "Профиль", description: "витрина для учеников" },
   ];
 
   return (

@@ -35,6 +35,9 @@ export default async function StudentDashboardPage({
 }) {
   const { studentId } = await params;
   const student = await db.studentProfile.findUnique({
+    include: {
+      preferredTeacher: true,
+    },
     where: {
       id: studentId,
     },
@@ -57,25 +60,7 @@ export default async function StudentDashboardPage({
       studentId: student.id,
     },
   });
-  const assignedTeacher =
-    nextLesson?.teacher ??
-    (await db.teacherProfile.findFirst({
-      orderBy: {
-        id: "asc",
-      },
-      where: {
-        lessons: {
-          some: {
-            studentId: student.id,
-          },
-        },
-      },
-    })) ??
-    (await db.teacherProfile.findFirst({
-      orderBy: {
-        id: "asc",
-      },
-    }));
+  const assignedTeacher = student.preferredTeacher;
   const upcomingLessons = await db.lesson.findMany({
     include: {
       teacher: true,
@@ -115,8 +100,11 @@ export default async function StudentDashboardPage({
 
   const lessonHref = `/student/${student.id}/lesson`;
   const nav = [
-    { href: lessonHref, label: "Урок", description: "открыть страницу урока" },
+    { href: lessonHref, label: "Уроки", description: "открыть список уроков" },
     { href: "#schedule-modal", label: "Расписание", description: "открыть календарь" },
+    assignedTeacher
+      ? { href: `/student/${student.id}/teacher`, label: "Мой учитель", description: "профиль учителя" }
+      : { href: `/student/${student.id}/teachers`, label: "Выбрать учителя", description: "каталог учителей" },
   ];
 
   return (
@@ -157,11 +145,20 @@ export default async function StudentDashboardPage({
                   <div className="mini-avatar">{getInitials(assignedTeacher.fullName)}</div>
                   <strong>{assignedTeacher.fullName}</strong>
                   <span>{assignedTeacher.id}</span>
-                  <p>Основной преподаватель</p>
+                  <p>{assignedTeacher.headline ?? "Основной преподаватель"}</p>
+                  <Link className="button" href={`/student/${student.id}/teacher`}>
+                    Открыть профиль
+                  </Link>
                 </div>
               </div>
             ) : (
-              <div className="empty-state compact">Учитель пока не назначен.</div>
+              <div className="empty-state compact teacher-empty-choice">
+                <strong>Учитель пока не выбран.</strong>
+                <span>Выберите преподавателя по языку, цене, рейтингу и видео-презентации.</span>
+                <Link className="button primary" href={`/student/${student.id}/teachers`}>
+                  Выбрать учителя
+                </Link>
+              </div>
             )}
           </Panel>
 
